@@ -1,0 +1,9 @@
+AddDefaultCharset UTF-8
+
+RewriteEngine On
+RewriteBase /calendrier.chaulacel/
+
+RewriteRule ^[^./]+$          %{REQUEST_URI}/             [R=301,L]
+
+RewriteRule ^$                /pages/index.php     [L,QSA]
+               
