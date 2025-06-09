@@ -1,8 +1,18 @@
 <?php
 // Fichier de configuration principal
 
-// Définir les chemins
-define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'].'/calendrier.chaulacel');
+// Déterminer l'environnement (dev ou prod)
+$is_prod = (strpos($_SERVER['HTTP_HOST'], 'localhost') === false && strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false);
+
+// Définir les chemins selon l'environnement
+if ($is_prod) {
+    // Environnement de production
+    define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT']);
+} else {
+    // Environnement de développement
+    define('ROOT_PATH', $_SERVER['DOCUMENT_ROOT'].'/calendrier.chaulacel');
+}
+
 define('TEMPLATES_PATH', ROOT_PATH.'/templates');
 define('STATICS_PATH', './statics');
 define('MODULES_PATH', './modules');
