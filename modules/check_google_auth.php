@@ -9,13 +9,13 @@ try {
 
 	// Vérifier si l'utilisateur est connecté
 	if (!isset($_SESSION['user_id']) || strpos($_SESSION['user_id'], 'temp_') === 0) {
-		echo json_encode(['success' => true, 'connected' => false, 'message' => 'Utilisateur non connecté']);
+		echo json_encode(['success' => true, 'connected' => false, 'message' => 'Utilisateur non connecté', 'should_auto_connect' => false]);
 		exit;
 	}
 
 	// Vérifier si les bibliothèques Google sont installées
 	if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
-			echo json_encode(['success' => false, 'message' => 'Google API Client non installé', 'connected' => false]);
+			echo json_encode(['success' => false, 'message' => 'Google API Client non installé', 'connected' => false, 'should_auto_connect' => false]);
 			exit;
 	}
 
@@ -34,9 +34,35 @@ try {
 	if (isset($_SESSION['google_access_token']) && isset($_SESSION['google_connected']) && $_SESSION['google_connected']) {
 		echo json_encode([
 			'success' => true,
-			'connected' => true
+			'connected' => true,
+			'should_auto_connect' => false
 		]);
 		exit;
+	}
+	
+	// Vérifier si l'utilisateur a choisi de se connecter automatiquement
+	$should_auto_connect = false;
+	if (isset($_SESSION['google_auto_connect']) && $_SESSION['google_auto_connect']) {
+		$should_auto_connect = true;
+	} else {
+		// Vérifier dans la base de données
+		if (isset($pdo) && $pdo !== null) {
+			try {
+				$stmt = $pdo->prepare("SELECT preferences FROM user_preferences WHERE user_id = ?");
+				$stmt->execute([$_SESSION['user_id']]);
+				$result = $stmt->fetch(PDO::FETCH_ASSOC);
+				
+				if ($result) {
+					$preferences = json_decode($result['preferences'], true);
+					if (isset($preferences['google_auto_connect']) && $preferences['google_auto_connect']) {
+						$should_auto_connect = true;
+						$_SESSION['google_auto_connect'] = true;
+					}
+				}
+			} catch (PDOException $e) {
+				error_log('Erreur de base de données: ' . $e->getMessage());
+			}
+		}
 	}
 	
 	// Vérifier si un token existe dans la base de données
@@ -65,13 +91,15 @@ try {
 
 	echo json_encode([
 			'success' => true,
-			'connected' => $connected
+			'connected' => $connected,
+			'should_auto_connect' => $should_auto_connect && !$connected
 	]);
 } catch (Exception $e) {
 	echo json_encode([
 			'success' => false,
 			'message' => 'Erreur: ' . $e->getMessage(),
-			'connected' => false
+			'connected' => false,
+			'should_auto_connect' => false
 	]);
 }
 ?>

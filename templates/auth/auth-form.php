@@ -17,6 +17,9 @@
 					<input type="checkbox" id="remember" name="remember">
 					<label for="remember">Se souvenir de moi</label>
 				</div>
+				<div class="forgot-password">
+					<a href="#" onclick="showForgotPasswordForm(); return false;">Mot de passe oublié ?</a>
+				</div>
 				<div class="form-buttons">
 					<button type="button" onclick="hideAuthForm()">Annuler</button>
 					<button type="submit">Valider</button>

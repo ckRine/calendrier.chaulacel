@@ -12,7 +12,8 @@ $isConnected = isset($_SESSION['user_id']) && strpos($_SESSION['user_id'], 'temp
 // Préférences par défaut
 $defaultPreferences = [
     'zones' => ['A'],
-    'selected_calendars' => []
+    'selected_calendars' => [],
+    'google_auto_connect' => false
 ];
 $preferences = $defaultPreferences;
 
@@ -25,6 +26,10 @@ if ($isConnected) {
     
     if (isset($_SESSION['selected_calendars'])) {
         $preferences['selected_calendars'] = $_SESSION['selected_calendars'];
+    }
+    
+    if (isset($_SESSION['google_auto_connect'])) {
+        $preferences['google_auto_connect'] = $_SESSION['google_auto_connect'];
     }
     
     // Sinon, essayer de récupérer depuis la base de données
@@ -48,6 +53,12 @@ if ($isConnected) {
                     // Mettre à jour la session
                     $_SESSION['selected_calendars'] = $dbPreferences['selected_calendars'];
                 }
+                
+                if (isset($dbPreferences['google_auto_connect'])) {
+                    $preferences['google_auto_connect'] = $dbPreferences['google_auto_connect'];
+                    // Mettre à jour la session
+                    $_SESSION['google_auto_connect'] = $dbPreferences['google_auto_connect'];
+                }
             }
         } catch (PDOException $e) {
             error_log('Erreur de base de données: ' . $e->getMessage());
@@ -59,6 +70,7 @@ echo json_encode([
     'success' => true,
     'zones' => $preferences['zones'],
     'selected_calendars' => $preferences['selected_calendars'],
+    'google_auto_connect' => $preferences['google_auto_connect'],
     'isConnected' => $isConnected
 ]);
 ?>

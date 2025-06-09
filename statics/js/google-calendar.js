@@ -52,20 +52,20 @@ function isDarkColor(color) {
 	let r, g, b;
 	
 	if (color.startsWith('#')) {
-			// Format hexadécimal
-			const hex = color.substring(1);
-			r = parseInt(hex.substring(0, 2), 16);
-			g = parseInt(hex.substring(2, 4), 16);
-			b = parseInt(hex.substring(4, 6), 16);
+		// Format hexadécimal
+		const hex = color.substring(1);
+		r = parseInt(hex.substring(0, 2), 16);
+		g = parseInt(hex.substring(2, 4), 16);
+		b = parseInt(hex.substring(4, 6), 16);
 	} else if (color.startsWith('rgb')) {
-			// Format rgb() ou rgba()
-			const rgbValues = color.match(/\d+/g);
-			r = parseInt(rgbValues[0]);
-			g = parseInt(rgbValues[1]);
-			b = parseInt(rgbValues[2]);
+		// Format rgb() ou rgba()
+		const rgbValues = color.match(/\d+/g);
+		r = parseInt(rgbValues[0]);
+		g = parseInt(rgbValues[1]);
+		b = parseInt(rgbValues[2]);
 	} else {
-			// Couleur non reconnue, considérer comme claire
-			return false;
+		// Couleur non reconnue, considérer comme claire
+		return false;
 	}
 	
 	// Calculer la luminosité (formule YIQ)
@@ -78,27 +78,30 @@ function isDarkColor(color) {
 // Vérifier l'état de l'authentification Google
 function checkGoogleAuth() {
 	fetch('./modules/check_google_auth.php')
-			.then(response => {
-					if (!response.ok) {
-							throw new Error('Erreur réseau');
-					}
-					return response.json();
-			})
-			.then(data => {
-					console.log('État de l\'authentification Google:', data);
-					googleConnected = data.connected;
-					updateGoogleCalendarButton();
-					
-					if (googleConnected) {
-							// Charger les préférences utilisateur
-							loadPreferences().then(() => {
-									fetchGoogleEvents(0);
-							});
-					}
-			})
-			.catch(error => {
-					console.error('Erreur lors de la vérification de l\'authentification Google:', error);
-			});
+		.then(response => {
+			if (!response.ok) {
+					throw new Error('Erreur réseau');
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('État de l\'authentification Google:', data);
+			googleConnected = data.connected;
+			updateGoogleCalendarButton();
+			
+			if (googleConnected) {
+				// Charger les préférences utilisateur
+				loadPreferences().then(() => {
+						fetchGoogleEvents(0);
+				});
+			} else if (data.should_auto_connect) {
+				// Si l'utilisateur a choisi de se connecter automatiquement à Google Calendar
+				connectGoogleCalendar();
+			}
+		})
+		.catch(error => {
+			console.error('Erreur lors de la vérification de l\'authentification Google:', error);
+		});
 }
 
 // Ajouter le bouton Google Calendar aux contrôles
@@ -163,6 +166,9 @@ function connectGoogleCalendar() {
 									if (authWindow.closed) {
 											clearInterval(checkAuth);
 											checkGoogleAuth();
+											
+											// Sauvegarder l'état de connexion dans les préférences utilisateur
+											saveGoogleConnectionState(true);
 									}
 							}, 1000);
 					} else {
@@ -194,6 +200,9 @@ function disconnectGoogleCalendar() {
 							updateGoogleCalendarButton();
 							showNotification('Déconnexion de Google Calendar réussie', 'success');
 							
+							// Sauvegarder l'état de déconnexion dans les préférences utilisateur
+							saveGoogleConnectionState(false);
+							
 							// Rafraîchir le calendrier si on est sur la page d'accueil
 							if (document.getElementById('calendar')) {
 									renderVisibleMonths();
@@ -207,6 +216,22 @@ function disconnectGoogleCalendar() {
 					console.error('Erreur lors de la déconnexion de Google Calendar:', error);
 					alert('Erreur de déconnexion de Google Calendar. Vérifiez la console pour plus de détails.');
 			});
+}
+
+// Sauvegarder l'état de connexion à Google Calendar
+function saveGoogleConnectionState(connected) {
+    fetch('./modules/save_google_state.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connected: connected })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('État de connexion Google sauvegardé:', data);
+    })
+    .catch(error => {
+        console.error('Erreur lors de la sauvegarde de l\'état de connexion Google:', error);
+    });
 }
 
 // Récupérer les événements Google Calendar
