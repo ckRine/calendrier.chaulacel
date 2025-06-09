@@ -41,13 +41,17 @@ $db_user = 'root';
 $db_pass = '';
 
 // Connexion à la base de données
-try {
-		$pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
-		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-		// En cas d'erreur, continuer sans base de données
-		error_log("Erreur de connexion à la base de données: " . $e->getMessage());
-		$pdo = null;
+$pdo = null;
+if (class_exists('PDO')) {
+    try {
+        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        // En cas d'erreur, continuer sans base de données
+        error_log("Erreur de connexion à la base de données: " . $e->getMessage());
+    }
+} else {
+    error_log("Extension PDO non disponible sur ce serveur");
 }
 
 // Charger les préférences utilisateur
