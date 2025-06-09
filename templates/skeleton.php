@@ -17,6 +17,7 @@
 		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/google-calendar.css">
 		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/account.css">
 		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/dropdown.css">
+		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/auth.css">
 		<link rel="stylesheet" href="statics/css/logo.css">
 		<script>
 			const STATICS_PATH = '<?= STATICS_PATH ?>';
@@ -29,5 +30,6 @@
     </div>
 		<script src="<?= STATICS_PATH ?>/js/script.js"></script>
 		<script src="<?= STATICS_PATH ?>/js/google-calendar.js"></script>
+		<script src="<?= STATICS_PATH ?>/js/auth.js"></script>
 	</body>
 </html>
