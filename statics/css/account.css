@@ -1,0 +1,171 @@
+/* Styles pour la page Mon compte */
+
+.account-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.account-section {
+    margin-bottom: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.account-section h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.account-info p {
+    margin: 10px 0;
+}
+
+.integration-item {
+    margin-bottom: 20px;
+}
+
+.integration-item h3 {
+    margin-top: 0;
+    color: #444;
+}
+
+.account-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4285F4;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #3367d6;
+}
+
+/* Styles pour les boutons Google Calendar */
+#google-calendar-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.google-connected {
+    background-color: #db4437;
+    color: white;
+}
+
+.google-disconnected {
+    background-color: #4285F4;
+    color: white;
+}
+
+.google-connected:hover {
+    background-color: #c53929;
+}
+
+.google-disconnected:hover {
+    background-color: #3367d6;
+}
+
+/* Styles pour les zones de vacances */
+.zones-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+}
+
+.zones-selection label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.zones-selection input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.zones-selection button {
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.zones-selection button:hover {
+    background-color: #45a049;
+}
+
+/* Styles pour la liste des calendriers Google */
+#google-calendars-list {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #eee;
+}
+
+#google-calendars-list h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.calendars-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.calendar-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.calendar-checkbox:hover {
+    background-color: #f0f0f0;
+}
+
+.calendar-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.save-calendars-btn {
+    padding: 8px 15px;
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.save-calendars-btn:hover {
+    background-color: #3367d6;
+}

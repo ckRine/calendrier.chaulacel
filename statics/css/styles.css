@@ -1,104 +1,456 @@
+:root {
+	--zone-a: #FF9800;
+	--zone-b: #03a9f4;
+	--zone-c: #8bc34a;
+	--today: #7d9fbb;
+}
+
+/* Masquer les numéros de semaine */
+.week-number,
+.week-num,
+[class*="week-number"],
+[class*="weekNumber"],
+[data-event-id^="Weeknum"],
+[id^="Weeknum"],
+[event-id^="Weeknum"] {
+	display: none !important;
+}
+
+/* Global styles */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f5f5f5;
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
 }
 
+/* Existing styles */
 .container {
-  max-width: 1200px;
-  margin: auto;
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #ccc;
+	max-width: 950px;
+	margin: 0 auto;
+	padding: 20px;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 20px;
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 24px;
+.color-box {
+	padding: 5px;
+	border-radius: 5px;
+	color: #fff;
 }
 
-.calendar {
-  display: flex;
-  overflow-x: auto;
-  white-space: nowrap;
-  padding-bottom: 10px;
+.color-box.zone-a {
+	background-color: var(--zone-a);
 }
 
-.calendar::-webkit-scrollbar {
-  height: 8px;
+.color-box.zone-b {
+	background-color: var(--zone-b);
 }
 
-.calendar::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
+.color-box.zone-c {
+	background-color: var(--zone-c);
 }
 
-.month {
-  width: 140px;
-  flex-shrink: 0;
-  margin-right: 10px;
-}
-
-.month h2 {
-  font-size: 14px;
-  text-align: center;
-  margin: 5px 0;
-}
-
-.days {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  font-size: 12px;
-}
-
-.day {
-  width: 140px;
-  padding: 2px 5px;
-  border: 1px solid #eee;
-  box-sizing: border-box;
-}
-
-.holiday {
-  background: #ffcccc;
-}
-
-.today {
-  background: #d0eaff;
-}
-
-.saturday {
-  background: #e6ffe6;
-}
-
-.sunday {
-  background: #fff0e6;
+header {
+	align-items: center;
+	display: flex;
+	height: 50px;
+	height: 50px;
+	justify-content: space-between;
+	margin-bottom: 20px;
 }
 
 .nav {
-  text-align: center;
-  margin-bottom: 20px;
+	display: flex;
+	gap: 10px;
 }
 
 .nav button {
-  color: #0066cc;
-  margin: 0 10px;
-  background: none;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  padding: 5px;
+	color: #0066cc;
+	margin: 0 10px;
+	background: none;
+	border: 1px solid #ccc;
+	cursor: pointer;
+	padding: 5px;
 }
 
-.nav button:hover {
-  background: #f0f0f0;
+.calendar-container {
+	padding: 0 50px;
+	position: relative;
 }
 
-.google-event {
-  background: #e6f3ff;
+.calendar {
+	display: flex;
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	gap: 10px;
+	padding-bottom: 20px;
+	scroll-behavior: smooth;
+}
+
+.calendar-nav {
+	position: absolute;
+	top: 30%;
+	transform: translateY(-50%);
+	width: 40px;
+	height: 40px;
+	background-color: rgba(255, 255, 255, 0.8);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	z-index: 10;
+	font-size: 24px;
+	font-weight: bold;
+	user-select: none;
+}
+
+.calendar-nav:hover {
+	background-color: rgba(240, 240, 240, 1);
+}
+
+.calendar-nav.prev {
+	left: 10px;
+}
+
+.calendar-nav.next {
+	right: 10px;
+}
+
+.month {
+	flex: 0 0 auto;
+	width: 160px;
+	border: 1px solid #ddd;
+	padding: 10px;
+}
+
+.month h2 {
+	text-align: center;
+	margin-bottom: 10px;
+	font-size: 16px;
+}
+
+.days {
+	display: flex;
+	flex-direction: column;
+	font-size: 12px;
+}
+
+.day {
+	padding: 0 5px;
+	border: 1px solid #eee;
+	box-sizing: border-box;
+	background: #fff;
+	position: relative;
+	min-height: 30px;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.day.today {
+	border: 2px solid var(--today);
+}
+
+.day.holiday {
+	background: #ffcccc;
+}
+
+.day.saturday {
+	background: #e6ffe6;
+}
+
+.day.sunday {
+	background: #fff0e6;
+}
+
+.day-header {
+	background: #e0e0e0;
+}
+
+.day-number {
+	margin-right: 8px;
+}
+
+.day-letter {
+	font-size: 11px;
+	margin-right: 8px;
+}
+
+.holiday-name {
+	font-size: 10px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.vacation-bars {
+	display: flex;
+	flex-direction: row;
+	gap: 2px;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 5px;
+	width: 20px;
+}
+
+.vacation-bar {
+	width: 5px;
+	flex: 1;
+}
+
+.vacation-bar.active.zone-a {
+	background: ;
+}
+
+.vacation-bar.active.zone-b {
+	background: var(--zone-b)
+}
+
+.vacation-bar.active.zone-c {
+	background: var(--zone-c);
+}
+
+/* New styles for auth form */
+.auth-controls {
+	gap: 10px;
+	align-items: center;
+}
+
+.user-menu {
+	position: relative;
+	display: inline-block;
+}
+
+.avatar-container {
+	cursor: pointer;
+}
+
+.avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background-color: #3498db;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+.user-dropdown {
+	display: none;
+	position: absolute;
+	left: 0;
+	background-color: white;
+	min-width: 200px;
+	box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+	z-index: 1;
+	border-radius: 4px;
+	padding: 10px;
+}
+
+.user-dropdown.show {
+	display: block;
+}
+
+.user-info {
+	padding: 10px;
+	text-align: center;
+	font-weight: bold;
+}
+
+.dropdown-divider {
+	height: 1px;
+	background-color: #e0e0e0;
+	margin: 5px 0;
+}
+
+.user-dropdown button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 8px 10px;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.user-dropdown button:hover {
+	background-color: #f1f1f1;
+}
+
+/* Modal styles */
+.modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 1001;
+}
+
+.modal-content {
+	position: relative;
+	z-index: 1002;
+	background-color: white;
+	border-radius: 8px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+	padding: 25px;
+	max-width: 400px;
+	width: 90%;
+	animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.close-button {
+	position: absolute;
+	top: 10px;
+	right: 15px;
+	font-size: 24px;
+	cursor: pointer;
+	color: #666;
+}
+
+.close-button:hover {
+	color: #000;
+}
+
+#auth-form {
+	text-align: center;
+}
+
+#auth-form-element {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	margin-top: 20px;
+}
+
+#auth-form label {
+	display: block;
+	text-align: left;
+	margin-bottom: 5px;
+	font-weight: bold;
+}
+
+#auth-form input {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 16px;
+}
+
+#auth-form .remember-me {
+	text-align: left;
+}
+
+#auth-form .remember-me input,
+#auth-form .remember-me label {
+	display: inline;
+	width: auto;
+}
+
+.form-buttons {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+}
+
+#auth-form button {
+	padding: 10px 20px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: bold;
+	transition: background-color 0.2s;
+}
+
+#auth-form button[type="submit"] {
+	background-color: #4CAF50;
+	color: white;
+}
+
+#auth-form button[type="submit"]:hover {
+	background-color: #45a049;
+}
+
+#auth-form button[type="button"] {
+	background-color: #f1f1f1;
+	color: #333;
+}
+
+#auth-form button[type="button"]:hover {
+	background-color: #ddd;
+}
+
+#auth-message {
+	margin-top: 10px;
+}
+
+#auth-message.success {
+	color: #4CAF50;
+	font-weight: bold;
+}
+
+#auth-message.error {
+	color: #d32f2f;
+	font-weight: bold;
+}
+
+/* Notification styles */
+.notification {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	padding: 15px 20px;
+	border-radius: 4px;
+	color: white;
+	font-weight: bold;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	opacity: 1;
+	transition: opacity 0.5s ease;
+}
+
+.notification.success {
+	background-color: #4CAF50;
+}
+
+.notification.error {
+	background-color: #d32f2f;
 }

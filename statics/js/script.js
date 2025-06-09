@@ -1,259 +1,450 @@
 const calendar = document.getElementById('calendar');
-const yearSpan = document.getElementById('year');
+const yearSelect = document.getElementById('year');
 let currentYear = new Date().getFullYear();
-let centralDate = new Date(); // Utilisé comme point de référence
-
-gapi.load('client:auth2', () => {
-		gapi.client.init({
-				apiKey: API_KEY,
-				clientId: CLIENT_ID,
-				discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-				scope: SCOPES
-		}).then(() => {
-				// Ensure auth2 is initialized
-				gapi.auth2.init({
-						client_id: CLIENT_ID,
-						scope: SCOPES
-				}).then(() => {
-						initClient();
-				});
-		}).catch(error => {
-				console.error('Error initializing Google API client:', error);
-		});
-});
+let centralDate = new Date();
+let selectedZones = ['A'];
 
 const months = [
-		'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-		'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+	'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet',
+	'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ];
 const dayLetters = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-const fixedHolidays = {
-		'1-1': 'Jour de l\'An',
-		'5-1': 'Fête du Travail',
-		'5-8': 'Victoire 1945',
-		'7-14': 'Fête Nationale',
-		'8-15': 'Assomption',
-		'11-1': 'Toussaint',
-		'11-11': 'Armistice',
-		'12-25': 'Noël'
-};
 
-function getEasterSunday(year) {
-		const a = year % 19;
-		const b = Math.floor(year / 100);
-		const c = year % 100;
-		const d = Math.floor(b / 4);
-		const e = b % 4;
-		const f = Math.floor((b + 8) / 25);
-		const g = Math.floor((b - f + 1) / 3);
-		const h = (19 * a + b - d - g + 15) % 30;
-		const i = Math.floor(c / 4);
-		const k = c % 4;
-		const l = (32 + 2 * e + 2 * i - h - k) % 7;
-		const m = Math.floor((a + 11 * h + 22 * l) / 451);
-		const month = Math.floor((h + l - 7 * m + 114) / 31);
-		const day = ((h + l - 7 * m + 114) % 31) + 1;
-		return new Date(year, month - 1, day);
+function showAuthForm(type) {
+	const modal = document.getElementById('auth-modal');
+	const title = document.getElementById('auth-title');
+	const formElement = document.getElementById('auth-form-element');
+	const message = document.getElementById('auth-message');
+
+	title.textContent = type === 'login' ? 'Connexion' : 'Inscription';
+	formElement.onsubmit = type === 'login' ? handleLogin : handleRegister;
+	message.textContent = '';
+	message.className = '';
+	modal.style.display = 'flex';
+	
+	// Focus sur le champ email
+	setTimeout(() => {
+		document.getElementById('email').focus();
+	}, 100);
 }
 
-const CLIENT_ID = '1007241733203-p87a3bce6v47ut1i28ul2sup1r86emmm.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyCVG0b41GRFSR3WVgnrzpDHGiMz6EKG-G0'; // Non nécessaire si OAuth
-const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+function hideAuthForm() {
+	document.getElementById('auth-modal').style.display = 'none';
+	document.getElementById('auth-form-element').reset();
+	const message = document.getElementById('auth-message');
+	message.textContent = '';
+	message.className = '';
+}
 
-function initClient() {
-		gapi.client.init({
-				clientId: CLIENT_ID,
-				scope: SCOPES
-		}).then(() => {
-				gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-				updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-				renderVisibleMonths(); // Move initial render here
-		}).catch(error => {
-				console.error('Error initializing Google API client:', error);
+// Fermer la modal avec la touche Escape
+document.addEventListener('keydown', function(event) {
+	if (event.key === 'Escape') {
+		const modal = document.getElementById('auth-modal');
+		if (modal && modal.style.display === 'flex') {
+			hideAuthForm();
+		}
+	}
+});
+
+async function handleRegister(e) {
+	e.preventDefault();
+	const email = document.getElementById('email').value;
+	const password = document.getElementById('password').value;
+	const messageElement = document.getElementById('auth-message');
+
+	try {
+		const response = await fetch('./modules/register.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
 		});
+		
+		const text = await response.text();
+		let data;
+		try {
+			data = JSON.parse(text);
+		} catch (error) {
+			console.error("Réponse non-JSON:", text);
+			messageElement.textContent = "Erreur serveur: réponse invalide";
+			messageElement.className = "error";
+			return;
+		}
+		
+		messageElement.textContent = data.message;
+		if (data.success) {
+			messageElement.className = "success";
+			setTimeout(() => location.reload(), 1000);
+		} else {
+			messageElement.className = "error";
+		}
+	} catch (error) {
+		console.error("Erreur:", error);
+		messageElement.textContent = "Erreur de connexion au serveur";
+		messageElement.className = "error";
+	}
 }
 
-function getVariableHolidays(year) {
-		const easter = getEasterSunday(year);
-		const holidays = { ...fixedHolidays };
+async function handleLogin(e) {
+	e.preventDefault();
+	const email = document.getElementById('email').value;
+	const password = document.getElementById('password').value;
+	const remember = document.getElementById('remember').checked;
+	const messageElement = document.getElementById('auth-message');
 
-		const easterMonday = new Date(easter);
-		easterMonday.setDate(easter.getDate() + 1);
-		holidays[`${easterMonday.getMonth() + 1}-${easterMonday.getDate()}`] = 'Lundi de Pâques';
+	try {
+		const response = await fetch('./modules/login.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&remember=${remember ? 1 : 0}`
+		});
+		
+		const text = await response.text();
+		let data;
+		try {
+			data = JSON.parse(text);
+		} catch (error) {
+			console.error("Réponse non-JSON:", text);
+			messageElement.textContent = "Erreur serveur: réponse invalide";
+			messageElement.className = "error";
+			return;
+		}
+		
+		messageElement.textContent = data.message;
+		if (data.success) {
+			messageElement.className = "success";
+			setTimeout(() => location.reload(), 1000);
+		} else {
+			messageElement.className = "error";
+		}
+	} catch (error) {
+		console.error("Erreur:", error);
+		messageElement.textContent = "Erreur de connexion au serveur";
+		messageElement.className = "error";
+	}
+}
 
-		const ascension = new Date(easter);
-		ascension.setDate(easter.getDate() + 39);
-		holidays[`${ascension.getMonth() + 1}-${ascension.getDate()}`] = 'Ascension';
+function toggleUserMenu() {
+	const dropdown = document.getElementById('user-dropdown');
+	dropdown.classList.toggle('show');
+}
 
-		const pentecostMonday = new Date(easter);
-		pentecostMonday.setDate(easter.getDate() + 50);
-		holidays[`${pentecostMonday.getMonth() + 1}-${pentecostMonday.getDate()}`] = 'Lundi de Pentecôte';
+function showUserPreferences() {
+	// À implémenter: afficher les préférences utilisateur
+	alert('Fonctionnalité "Mon compte" à venir');
+}
 
+// Fermer le menu déroulant si l'utilisateur clique en dehors
+window.addEventListener('click', function(event) {
+	if (!event.target.closest('.user-menu')) {
+		const dropdown = document.getElementById('user-dropdown');
+		if (dropdown && dropdown.classList.contains('show')) {
+			dropdown.classList.remove('show');
+		}
+	}
+});
+
+async function logout() {
+	const response = await fetch('./modules/logout.php');
+	const data = await response.json();
+	if (data.success) {
+		location.reload();
+	}
+}
+
+async function savePreferences() {
+	try {
+		const response = await fetch('./modules/save_preferences.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ zones: selectedZones })
+		});
+		const data = await response.json();
+		
+		// Créer un élément de message temporaire
+		const messageDiv = document.createElement('div');
+		messageDiv.textContent = data.message;
+		messageDiv.className = data.success ? 'notification success' : 'notification error';
+		document.body.appendChild(messageDiv);
+		
+		// Faire disparaître le message après 3 secondes
+		setTimeout(() => {
+			messageDiv.style.opacity = '0';
+			setTimeout(() => {
+				document.body.removeChild(messageDiv);
+			}, 500);
+		}, 3000);
+	} catch (error) {
+		console.error("Erreur:", error);
+		alert("Erreur lors de la sauvegarde des préférences");
+	}
+}
+
+async function loadPreferences() {
+	const response = await fetch('./modules/get_preferences.php');
+	if (response.ok) {
+		const data = await response.json();
+		if (data.success) {
+			// Charger les zones sélectionnées
+			if (data.zones && data.zones.length > 0) {
+				selectedZones = data.zones;
+				['A', 'B', 'C'].forEach(zone => {
+					const checkbox = document.querySelector(`input[value="${zone}"]`);
+					if (checkbox) {
+						checkbox.checked = selectedZones.includes(zone);
+					}
+				});
+			}
+			
+			// Charger les calendriers sélectionnés
+			if (typeof window.selectedCalendars !== 'undefined' && data.selected_calendars) {
+				window.selectedCalendars = data.selected_calendars;
+			}
+		}
+		return data;
+	}
+	return { success: false };
+}
+
+async function fetchHolidays(year) {
+	try {
+		const response = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`);
+		const data = await response.json();
+		const holidays = {};
+		Object.entries(data).forEach(([date, name]) => {
+			const [year, month, day] = date.split('-').map(Number);
+			holidays[`${month}-${day}`] = name;
+		});
 		return holidays;
+	} catch (error) {
+		console.error('Erreur lors de la récupération des jours fériés :', error);
+		return {};
+	}
+}
+
+async function fetchSchoolHolidays(year, zone) {
+	try {
+		const response = await fetch(`https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-calendrier-scolaire&q=&rows=1000&sort=-start_date&facet=start_date&facet=end_date&facet=description&refine.zones=Zone+${zone}`);
+		const data = await response.json();
+		const vacations = {};
+		data.records.forEach(record => {
+			const start = new Date(record.fields.start_date);
+			const end = new Date(record.fields.end_date);
+			const recordYear = start.getFullYear();
+			if (recordYear === year || recordYear === year + 1) {
+				let current = new Date(start);
+				while (current <= end) {
+					if (current.getFullYear() === year) {
+						vacations[`${current.getMonth() + 1}-${current.getDate()}`] = zone;
+					}
+					current.setDate(current.getDate() + 1);
+				}
+			}
+		});
+		return vacations;
+	} catch (error) {
+		console.error('Erreur lors de la récupération des vacances :', error);
+		return {};
+	}
 }
 
 async function renderVisibleMonths() {
-	 calendar.innerHTML = '';
-		const centerMonth = centralDate.getMonth();
-		const centerYear = centralDate.getFullYear();
-		yearSpan.textContent = centerYear;
+	// Vérifier si l'élément calendar existe
+	const calendar = document.getElementById('calendar');
+	if (!calendar) {
+			console.log("Élément calendar non trouvé, probablement sur une autre page");
+			return; // Sortir de la fonction si l'élément n'existe pas
+	}
+	
+	calendar.innerHTML = '';
+	const centerMonth = centralDate.getMonth();
+	const centerYear = parseInt(yearSelect.value);
+	yearSelect.value = centerYear;
 
-		const holidays = getVariableHolidays(centerYear);
-		let googleEvents = [];
+	const holidays = await fetchHolidays(centerYear);
+	const schoolHolidays = { A: {}, B: {}, C: {} };
+	for (const zone of ['A', 'B', 'C']) {
+		if (selectedZones.includes(zone)) {
+			schoolHolidays[zone] = await fetchSchoolHolidays(centerYear, zone);
+		}
+	}
 
-		// Check if auth2 is available and user is signed in
-		if (gapi.auth2 && gapi.auth2.getAuthInstance && gapi.auth2.getAuthInstance().isSignedIn.get()) {
-				try {
-						const response = await gapi.client.calendar.events.list({
-								calendarId: 'primary',
-								timeMin: new Date(centerYear, centerMonth - 3, 1).toISOString(),
-								timeMax: new Date(centerYear, centerMonth + 4, 0).toISOString(),
-								singleEvents: true,
-								orderBy: 'startTime'
-						});
-						googleEvents = response.result.items;
-				} catch (error) {
-						console.error('Error fetching Google Calendar events:', error);
-				}
+	for (let offset = -2; offset <= 2; offset++) {
+		const date = new Date(centerYear, centerMonth + offset, 1);
+		const month = date.getMonth();
+		const year = date.getFullYear();
+		const monthDiv = document.createElement('div');
+		monthDiv.className = 'month';
+		monthDiv.id = `month-${year}-${month}`;
+		monthDiv.innerHTML = `<h2>${months[month]} ${year}</h2>`;
+
+		const daysDiv = document.createElement('div');
+		daysDiv.className = 'days';
+
+		const lastDate = new Date(year, month + 1, 0).getDate();
+
+		for (let i = 1; i <= lastDate; i++) {
+			const currentDate = new Date(year, month, i);
+			const dayIndex = currentDate.getDay();
+			const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+			const dayLetter = dayLetters[adjustedDayIndex];
+
+			const isToday = currentDate.toDateString() === new Date().toDateString();
+			const isHoliday = holidays[`${month + 1}-${i}`];
+			const isSchoolHoliday = ['A', 'B', 'C'].some(zone => schoolHolidays[zone][`${month + 1}-${i}`]);
+			const isSaturday = dayIndex === 6;
+			const isSunday = dayIndex === 0;
+
+			const displayText = isHoliday ? isHoliday : '';
+			let vacationBars = '';
+			['A', 'B', 'C'].forEach(zone => {
+				const isActive = selectedZones.includes(zone) && schoolHolidays[zone][`${month + 1}-${i}`];
+				vacationBars += `<div class="vacation-bar zone-${zone.toLowerCase()} ${isActive ? 'active' : ''}"></div>`;
+			});
+
+			const dayDiv = document.createElement('div');
+			dayDiv.className = `day ${isToday ? 'today' : ''} ${isHoliday ? 'holiday' : ''} ${isSchoolHoliday ? 'school-holiday' : ''} ${isSaturday ? 'saturday' : ''} ${isSunday ? 'sunday' : ''}`;
+			
+			// Ajouter le numéro du jour
+			const dayNumber = document.createElement('span');
+			dayNumber.className = 'day-number';
+			dayNumber.textContent = i;
+			dayDiv.appendChild(dayNumber);
+			
+			// Ajouter la lettre du jour
+			const dayLetterSpan = document.createElement('span');
+			dayLetterSpan.className = 'day-letter';
+			dayLetterSpan.textContent = dayLetter;
+			dayDiv.appendChild(dayLetterSpan);
+			
+			// Ajouter le nom du jour férié si présent
+			if (displayText) {
+				const holidayName = document.createElement('span');
+				holidayName.className = 'holiday-name';
+				holidayName.textContent = displayText;
+				dayDiv.appendChild(holidayName);
+			}
+			
+			// Ajouter les barres de vacances
+			const vacationBarsDiv = document.createElement('div');
+			vacationBarsDiv.className = 'vacation-bars';
+			vacationBarsDiv.innerHTML = vacationBars;
+			dayDiv.appendChild(vacationBarsDiv);
+			
+			// Ajouter les événements Google Calendar si disponibles
+			if (typeof renderGoogleEvents === 'function') {
+				renderGoogleEvents(currentDate, dayDiv);
+			}
+			
+			daysDiv.appendChild(dayDiv);
 		}
 
-		for (let offset = -3; offset <= 3; offset++) {
-				const date = new Date(centerYear, centerMonth + offset, 1);
-				const month = date.getMonth();
-				const year = date.getFullYear();
-				const monthDiv = document.createElement('div');
-				monthDiv.className = 'month';
-				monthDiv.id = `month-${year}-${month}`;
-				monthDiv.innerHTML = `<h2>${months[month]} ${year}</h2>`;
-
-				const daysDiv = document.createElement('div');
-				daysDiv.className = 'days';
-
-				const lastDate = new Date(year, month + 1, 0).getDate();
-
-				for (let i = 1; i <= lastDate; i++) {
-						const currentDate = new Date(year, month, i);
-						const dayIndex = currentDate.getDay();
-						const adjustedDayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-
-						const isToday = currentDate.toDateString() === new Date().toDateString();
-						const isHoliday = holidays[`${month + 1}-${i}`];
-						const isSaturday = dayIndex === 6;
-						const isSunday = dayIndex === 0;
-
-						const displayText = isHoliday ? isHoliday : '';
-						daysDiv.innerHTML += `<div class="day ${isToday ? 'today' : ''} ${isHoliday ? 'holiday' : ''} ${isSaturday ? 'saturday' : ''} ${isSunday ? 'sunday' : ''}">
-								${i} ${dayLetters[adjustedDayIndex]} ${displayText}
-						</div>`;
-				}
-
-				monthDiv.appendChild(daysDiv);
-				calendar.appendChild(monthDiv);
+		monthDiv.appendChild(daysDiv);
+		calendar.appendChild(monthDiv);
+	}
+	
+	// Faire défiler jusqu'au mois central
+	setTimeout(() => {
+		const centerMonthElement = document.getElementById(`month-${centerYear}-${centerMonth}`);
+		if (centerMonthElement) {
+			centerMonthElement.scrollIntoView({ behavior: 'smooth', inline: 'center' });
 		}
+	}, 100);
 }
 
-function goToToday() {
-		currentYear = new Date().getFullYear();
-		renderVisibleMonths();
-		const today = new Date();
-		const currentMonth = today.getMonth();
-		const monthElement = document.getElementById(`month-${currentMonth}`);
-		if (monthElement) {
-				monthElement.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'center' });
-		}
+function updateYear(year) {
+	currentYear = parseInt(year);
+	centralDate.setFullYear(currentYear);
+	renderVisibleMonths();
+	// Mettre à jour les événements Google Calendar si connecté
+	if (typeof googleConnected !== 'undefined' && googleConnected) {
+		fetchGoogleEvents(0);
+	}
+}
+
+function updateZones(zone, checked) {
+	if (checked) {
+		if (!selectedZones.includes(zone)) selectedZones.push(zone);
+	} else {
+		selectedZones = selectedZones.filter(z => z !== zone);
+	}
+	if (selectedZones.length === 0) selectedZones.push('A');
+	
+	// Sauvegarder les préférences si l'utilisateur est connecté
+	const userDropdown = document.getElementById('user-dropdown');
+	if (userDropdown) {
+		savePreferences();
+	}
+	
+	renderVisibleMonths();
 }
 
 function prevYear() {
-		currentYear--;
-		renderVisibleMonths();
+	currentYear--;
+	yearSelect.value = currentYear;
+	centralDate.setFullYear(currentYear);
+	renderVisibleMonths();
 }
+
 function prevMonths() {
-		centralDate.setMonth(centralDate.getMonth() - 2);
-		renderVisibleMonths();
+	centralDate.setMonth(centralDate.getMonth() - 1);
+	renderVisibleMonths();
+	// Mettre à jour les événements Google Calendar si connecté
+	if (typeof googleConnected !== 'undefined' && googleConnected) {
+		fetchGoogleEvents(-1);
+	}
 }
 
 function nextMonths() {
-		centralDate.setMonth(centralDate.getMonth() + 2);
-		renderVisibleMonths();
+	centralDate.setMonth(centralDate.getMonth() + 1);
+	renderVisibleMonths();
+	// Mettre à jour les événements Google Calendar si connecté
+	if (typeof googleConnected !== 'undefined' && googleConnected) {
+		fetchGoogleEvents(1);
+	}
 }
 
+// Ajouter la navigation avec les touches fléchées du clavier
+document.addEventListener('keydown', function(event) {
+	if (event.key === 'ArrowLeft') {
+		prevMonths();
+	} else if (event.key === 'ArrowRight') {
+		nextMonths();
+	}
+});
+
 function goToToday() {
-		centralDate = new Date();
-		renderVisibleMonths();
+	centralDate = new Date();
+	currentYear = centralDate.getFullYear();
+	yearSelect.value = currentYear;
+	renderVisibleMonths();
+	// Mettre à jour les événements Google Calendar si connecté
+	if (typeof googleConnected !== 'undefined' && googleConnected) {
+		fetchGoogleEvents(0);
+	}
 }
 
 function nextYear() {
-		currentYear++;
-		renderVisibleMonths();
+	currentYear++;
+	yearSelect.value = currentYear;
+	centralDate.setFullYear(currentYear);
+	renderVisibleMonths();
 }
 
+async function forceLogout() {
+	const response = await fetch('./modules/logout.php');
+	const data = await response.json();
+	if (data.success) {
+		// Au lieu de recharger la page, utiliser forceLogout
+		// Définir un cookie de déconnexion
+		document.cookie = 'logged_out=1; Path=/;';
+		
+		// Supprimer le cookie PHPSESSID
+		document.cookie = 'PHPSESSID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+		
+		// Rediriger vers la page d'accueil
+		window.location.href = './index.php';
+	}
+}
+
+loadPreferences();
 renderVisibleMonths();
-
-function handleCredentialResponse(response) {
-		const syncBtn = document.getElementById("sync-button");
-		if (syncBtn) {
-				syncBtn.disabled = !response.credential;
-		}
-		// Décodez le jeton JWT et stockez-le
-		gapi.client.setToken({ access_token: response.credential });
-		renderVisibleMonths();
-}
-
-function updateSigninStatus(isSignedIn) {
-		const syncBtn = document.getElementById("sync-button");
-		if (syncBtn) {
-				syncBtn.disabled = !isSignedIn;
-		}
-}
-
-function handleAuthClick() {
-	gapi.auth2.getAuthInstance().signIn()
-		.then(() => {
-			console.log("Connexion réussie");
-		})
-		.catch(error => {
-		if (error && error.error === 'popup_closed_by_user') {
-		console.warn("Connexion annulée par l'utilisateur.");
-		} else {
-		console.error("Erreur d'authentification :", error);
-		}
-	});
-}
-
-function handleSignOutClick() {
-		gapi.auth2.getAuthInstance().signOut();
-}
-
-function syncToGoogleCalendar() {
-		const holidays = Object.entries(getVariableHolidays(centralDate.getFullYear()));
-		const events = [];
-
-		holidays.forEach(([key, title]) => {
-				const [month, day] = key.split('-');
-				const date = new Date(centralDate.getFullYear(), month - 1, day);
-				events.push({
-						summary: title,
-						start: { date: date.toISOString().split('T')[0] },
-						end: { date: date.toISOString().split('T')[0] }
-				});
-		});
-
-		schoolVacations.forEach(vac => {
-				events.push({
-						summary: vac.name,
-						start: { date: vac.start.toISOString().split('T')[0] },
-						end: { date: new Date(vac.end.getTime() + 86400000).toISOString().split('T')[0] }
-				});
-		});
-
-		events.forEach(event => {
-				gapi.client.calendar.events.insert({
-						calendarId: 'primary',
-						resource: event
-				}).then(() => {
-						console.log(`Événement ajouté : ${event.summary}`);
-				});
-		});
-
-		alert("Événements synchronisés dans votre agenda Google.");
-}

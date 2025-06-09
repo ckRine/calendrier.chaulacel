@@ -1,0 +1,46 @@
+/* Styles pour l'affichage du logo */
+.logo {
+  display: inline-block;
+  max-width: 50px;
+  height: auto;
+}
+
+.logo-small {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  vertical-align: middle;
+}
+
+.logo-container {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.site-header .logo {
+  margin-right: 15px;
+}
+
+/* Animation pour le logo au survol */
+.logo:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+/* Media queries pour l'affichage responsive */
+@media (max-width: 768px) {
+  .logo {
+    max-width: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    max-width: 100px;
+  }
+
+  .logo-small {
+    width: 24px;
+    height: 24px;
+  }
+}

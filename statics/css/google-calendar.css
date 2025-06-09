@@ -1,0 +1,114 @@
+/* Styles pour l'intégration Google Calendar */
+
+/* Bouton Google Calendar */
+#google-calendar-button {
+	background-color: #4285f4;
+	color: white;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: bold;
+	margin-left: 10px;
+}
+
+#google-calendar-button:hover {
+	background-color: #3367d6;
+}
+
+#google-calendar-button.google-connected {
+	background-color: #34a853;
+}
+
+#google-calendar-button.google-connected:hover {
+	background-color: #2d9249;
+}
+
+/* Événements Google Calendar */
+.google-events {
+	margin-right: 15px;
+	margin-top: 4px;
+	max-height: 60px;
+	overflow-y: auto;
+}
+
+.google-event {
+	color: white;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-size: 0.8em;
+	margin-bottom: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+	text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Couleurs par défaut des calendriers Google */
+.google-event[data-calendar-id="primary"] {
+	background-color: #4285F4;
+	/* Bleu Google */
+}
+
+/* Palette de couleurs Google Calendar */
+.calendar-color-1 {
+	background-color: #7986CB;
+}
+
+/* Lavande */
+.calendar-color-2 {
+	background-color: #33B679;
+}
+
+/* Sauge */
+.calendar-color-3 {
+	background-color: #8E24AA;
+}
+
+/* Raisin */
+.calendar-color-4 {
+	background-color: #E67C73;
+}
+
+/* Flamant */
+.calendar-color-5 {
+	background-color: #F6BF26;
+}
+
+/* Banane */
+.calendar-color-6 {
+	background-color: #F4511E;
+}
+
+/* Mandarine */
+.calendar-color-7 {
+	background-color: #039BE5;
+}
+
+/* Paon */
+.calendar-color-8 {
+	background-color: #0B8043;
+}
+
+/* Basilic */
+.calendar-color-9 {
+	background-color: #3F51B5;
+}
+
+/* Myrtille */
+.calendar-color-10 {
+	background-color: #7CB342;
+}
+
+/* Avocat */
+.calendar-color-11 {
+	background-color: #616161;
+}
+
+/* Graphite */
+
+/* Styles pour les jours avec événements Google */
+.day-cell.has-google-events {
+	background-color: #e8f0fe;
+}
