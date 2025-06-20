@@ -181,7 +181,7 @@
 .agenda-cell all-day-row:first-child,
 .agenda-cell all-day-row:first-child,
 .agenda-cell time {
-	width 50px;
+	width: 50px;
 }
 
 .day-name {
