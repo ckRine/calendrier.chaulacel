@@ -6,39 +6,28 @@
 
 // Chemin vers le fichier ExtensionSet.php
 $extensionSetPath = __DIR__ . '/vendor/twig/twig/src/ExtensionSet.php';
+$newFilePath = __DIR__ . '/vendor/twig/twig/src/ExtensionSet.php.new';
 
-// Vérifier si le fichier existe
+// Vérifier si les fichiers existent
 if (!file_exists($extensionSetPath)) {
     die("Erreur: Le fichier ExtensionSet.php n'existe pas à l'emplacement attendu.");
 }
 
+if (!file_exists($newFilePath)) {
+    die("Erreur: Le fichier de remplacement ExtensionSet.php.new n'existe pas.");
+}
+
 // Sauvegarder le fichier original
-copy($extensionSetPath, $extensionSetPath . '.bak');
-
-// Contenu du fichier modifié
-$content = file_get_contents($extensionSetPath);
-
-// Remplacer la méthode getSignature
-$pattern = '/public function getSignature\(\)\s*\{.*?return json_encode\(\[(.*?)\]\);.*?\}/s';
-$replacement = 'public function getSignature()
-    {
-        // Utiliser serialize au lieu de json_encode
-        return serialize([${1}]);
-    }';
-
-$newContent = preg_replace($pattern, $replacement, $content);
-
-// Vérifier si le remplacement a fonctionné
-if ($newContent === $content) {
-    die("Erreur: Impossible de trouver et remplacer la méthode getSignature.");
+if (!copy($extensionSetPath, $extensionSetPath . '.bak')) {
+    die("Erreur: Impossible de sauvegarder le fichier original.");
 }
 
-// Écrire le nouveau contenu dans le fichier
-if (file_put_contents($extensionSetPath, $newContent)) {
-    echo "Succès: Le fichier ExtensionSet.php a été modifié avec succès.\n";
-} else {
-    echo "Erreur: Impossible d'écrire dans le fichier ExtensionSet.php.\n";
+// Remplacer le fichier
+if (!copy($newFilePath, $extensionSetPath)) {
+    die("Erreur: Impossible de remplacer le fichier ExtensionSet.php.");
 }
+
+echo "Succès: Le fichier ExtensionSet.php a été remplacé avec succès.\n";
 
 // Vider le cache Twig
 $cachePath = __DIR__ . '/cache/twig';

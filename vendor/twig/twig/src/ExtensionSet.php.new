@@ -1,0 +1,444 @@
+<?php
+
+/*
+ * This file is part of Twig.
+ *
+ * (c) Fabien Potencier
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Twig;
+
+use Twig\Error\RuntimeError;
+use Twig\Extension\ExtensionInterface;
+use Twig\Extension\GlobalsInterface;
+use Twig\Extension\StagingExtension;
+use Twig\NodeVisitor\NodeVisitorInterface;
+use Twig\TokenParser\TokenParserInterface;
+
+/**
+ * @author Fabien Potencier <fabien@symfony.com>
+ *
+ * @internal
+ */
+class ExtensionSet
+{
+    private $extensions;
+    private $initialized = false;
+    private $runtimeInitialized = false;
+    private $staging;
+    private $parsers;
+    private $visitors;
+    private $filters;
+    private $tests;
+    private $functions;
+    private $unaryOperators;
+    private $binaryOperators;
+    private $globals;
+    private $functionCallbacks;
+    private $filterCallbacks;
+    private $parserCallbacks;
+    private $lastModified = 0;
+
+    public function __construct()
+    {
+        $this->staging = new StagingExtension();
+    }
+
+    public function addExtension(ExtensionInterface $extension)
+    {
+        $class = \get_class($extension);
+        if (isset($this->extensions[$class])) {
+            return;
+        }
+
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to register extension "%s" as extensions have already been initialized.', $class));
+        }
+
+        $this->extensions[$class] = $extension;
+    }
+
+    public function getExtensions()
+    {
+        return $this->extensions;
+    }
+
+    // MÉTHODE MODIFIÉE: Utilisation de serialize au lieu de json_encode
+    public function getSignature()
+    {
+        return serialize([
+            'functions' => array_keys($this->getFunctions()),
+            'filters' => array_keys($this->getFilters()),
+            'tests' => array_keys($this->getTests()),
+        ]);
+    }
+
+    public function resolveMissingFilter($name)
+    {
+        if (isset($this->filterCallbacks[$name])) {
+            $this->filters[$name] = $this->filterCallbacks[$name]();
+            unset($this->filterCallbacks[$name]);
+        }
+    }
+
+    public function resolveMissingFunction($name)
+    {
+        if (isset($this->functionCallbacks[$name])) {
+            $this->functions[$name] = $this->functionCallbacks[$name]();
+            unset($this->functionCallbacks[$name]);
+        }
+    }
+
+    public function resolveMissingTest($name)
+    {
+        if (isset($this->tests[$name])) {
+            return;
+        }
+
+        if (isset($this->staging->tests[$name])) {
+            $this->tests[$name] = $this->staging->tests[$name];
+            unset($this->staging->tests[$name]);
+
+            return;
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            $tests = $extension->getTests();
+
+            foreach ($tests as $test) {
+                if ($name === $test->getName()) {
+                    $this->tests[$name] = $test;
+
+                    return;
+                }
+            }
+        }
+    }
+
+    public function getFilter($name)
+    {
+        if (isset($this->filters[$name])) {
+            return $this->filters[$name];
+        }
+
+        $this->resolveMissingFilter($name);
+
+        if (isset($this->filters[$name])) {
+            return $this->filters[$name];
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            $filters = $extension->getFilters();
+
+            foreach ($filters as $filter) {
+                if ($name === $filter->getName()) {
+                    return $this->filters[$name] = $filter;
+                }
+            }
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            if ($extension instanceof StagingExtension) {
+                if (isset($extension->filters[$name])) {
+                    return $this->filters[$name] = $extension->filters[$name];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function getTest($name)
+    {
+        if (isset($this->tests[$name])) {
+            return $this->tests[$name];
+        }
+
+        $this->resolveMissingTest($name);
+
+        return $this->tests[$name] ?? null;
+    }
+
+    public function getFunction($name)
+    {
+        if (isset($this->functions[$name])) {
+            return $this->functions[$name];
+        }
+
+        $this->resolveMissingFunction($name);
+
+        if (isset($this->functions[$name])) {
+            return $this->functions[$name];
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            $functions = $extension->getFunctions();
+
+            foreach ($functions as $function) {
+                if ($name === $function->getName()) {
+                    return $this->functions[$name] = $function;
+                }
+            }
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            if ($extension instanceof StagingExtension) {
+                if (isset($extension->functions[$name])) {
+                    return $this->functions[$name] = $extension->functions[$name];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function registerUndefinedFilterCallback(callable $callable)
+    {
+        $this->filterCallbacks[] = $callable;
+    }
+
+    public function registerUndefinedFunctionCallback(callable $callable)
+    {
+        $this->functionCallbacks[] = $callable;
+    }
+
+    public function getFilters()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->filters;
+    }
+
+    public function getFunctions()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->functions;
+    }
+
+    public function getTests()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->tests;
+    }
+
+    public function getUnaryOperators()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->unaryOperators;
+    }
+
+    public function getBinaryOperators()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->binaryOperators;
+    }
+
+    public function getGlobals()
+    {
+        if (null !== $this->globals) {
+            return $this->globals;
+        }
+
+        $globals = [];
+        foreach ($this->getExtensions() as $extension) {
+            if ($extension instanceof GlobalsInterface) {
+                $extGlobals = $extension->getGlobals();
+                if (!\is_array($extGlobals)) {
+                    throw new \UnexpectedValueException(sprintf('"%s::getGlobals()" must return an array of globals.', \get_class($extension)));
+                }
+
+                $globals = array_merge($globals, $extGlobals);
+            }
+        }
+
+        if ($this->initialized) {
+            $this->globals = $globals;
+        }
+
+        return $globals;
+    }
+
+    public function getTokenParsers()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->parsers;
+    }
+
+    public function getNodeVisitors()
+    {
+        if (!$this->initialized) {
+            $this->initExtensions();
+        }
+
+        return $this->visitors;
+    }
+
+    public function getLastModified()
+    {
+        if (0 !== $this->lastModified) {
+            return $this->lastModified;
+        }
+
+        foreach ($this->getExtensions() as $extension) {
+            $r = new \ReflectionObject($extension);
+            if (is_file($r->getFileName()) && ($extensionTime = filemtime($r->getFileName())) > $this->lastModified) {
+                $this->lastModified = $extensionTime;
+            }
+        }
+
+        return $this->lastModified;
+    }
+
+    public function addFunction(TwigFunction $function)
+    {
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to add function "%s" as extensions have already been initialized.', $function->getName()));
+        }
+
+        $this->staging->addFunction($function);
+    }
+
+    public function addFilter(TwigFilter $filter)
+    {
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to add filter "%s" as extensions have already been initialized.', $filter->getName()));
+        }
+
+        $this->staging->addFilter($filter);
+    }
+
+    public function addNodeVisitor(NodeVisitorInterface $visitor)
+    {
+        if ($this->initialized) {
+            throw new \LogicException('Unable to add a node visitor as extensions have already been initialized.');
+        }
+
+        $this->staging->addNodeVisitor($visitor);
+    }
+
+    public function addTokenParser(TokenParserInterface $parser)
+    {
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to add token parser "%s" as extensions have already been initialized.', \get_class($parser)));
+        }
+
+        $this->staging->addTokenParser($parser);
+    }
+
+    public function addTest(TwigTest $test)
+    {
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to add test "%s" as extensions have already been initialized.', $test->getName()));
+        }
+
+        $this->staging->addTest($test);
+    }
+
+    public function initRuntime()
+    {
+        $this->runtimeInitialized = true;
+    }
+
+    public function hasExtension(string $class)
+    {
+        return isset($this->extensions[$class]);
+    }
+
+    public function getExtension(string $class)
+    {
+        if (!isset($this->extensions[$class])) {
+            throw new RuntimeError(sprintf('The "%s" extension is not enabled.', $class));
+        }
+
+        return $this->extensions[$class];
+    }
+
+    public function initExtensions()
+    {
+        if ($this->initialized) {
+            return;
+        }
+
+        $this->parsers = [];
+        $this->filters = [];
+        $this->functions = [];
+        $this->tests = [];
+        $this->visitors = [];
+        $this->unaryOperators = [];
+        $this->binaryOperators = [];
+
+        foreach ($this->getExtensions() as $extension) {
+            $this->initExtension($extension);
+        }
+
+        $this->initExtension($this->staging);
+        // Done at the end only, so that an exception during initialization does not mark the environment as initialized when catching the exception
+        $this->initialized = true;
+    }
+
+    private function initExtension(ExtensionInterface $extension)
+    {
+        // filters
+        foreach ($extension->getFilters() as $filter) {
+            $this->filters[$filter->getName()] = $filter;
+        }
+
+        // functions
+        foreach ($extension->getFunctions() as $function) {
+            $this->functions[$function->getName()] = $function;
+        }
+
+        // tests
+        foreach ($extension->getTests() as $test) {
+            $this->tests[$test->getName()] = $test;
+        }
+
+        // token parsers
+        foreach ($extension->getTokenParsers() as $parser) {
+            if (!$parser instanceof TokenParserInterface) {
+                throw new \LogicException('getTokenParsers() must return an array of \Twig\TokenParser\TokenParserInterface.');
+            }
+
+            $this->parsers[] = $parser;
+        }
+
+        // node visitors
+        foreach ($extension->getNodeVisitors() as $visitor) {
+            $this->visitors[] = $visitor;
+        }
+
+        // operators
+        if ($operators = $extension->getOperators()) {
+            if (!\is_array($operators)) {
+                throw new \InvalidArgumentException(sprintf('"%s::getOperators()" must return an array with operators, got "%s".', \get_class($extension), \is_object($operators) ? \get_class($operators) : \gettype($operators).(\is_resource($operators) ? '' : '#'.$operators)));
+            }
+
+            if (2 !== \count($operators)) {
+                throw new \InvalidArgumentException(sprintf('"%s::getOperators()" must return an array of 2 elements, got %d.', \get_class($extension), \count($operators)));
+            }
+
+            $this->unaryOperators = array_merge($this->unaryOperators, $operators[0]);
+            $this->binaryOperators = array_merge($this->binaryOperators, $operators[1]);
+        }
+    }
+}
