@@ -16,7 +16,7 @@ function showAuthForm(mode = 'login') {
     }
     
     // Afficher le modal
-    document.getElementById('auth-modal').style.display = 'block';
+    document.getElementById('auth-modal').style.display = 'flex';
 }
 
 // Cacher le formulaire d'authentification
@@ -46,7 +46,8 @@ function handleLogin(event) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&remember=${remember}`,
+        body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&remember=${remember ? 1 : 0}`,
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {
@@ -57,6 +58,11 @@ function handleLogin(event) {
             }, 1000);
         } else {
             document.getElementById('auth-message').innerHTML = `<div class="error">${data.message}</div>`;
+            
+            // Si l'utilisateur n'est pas enregistré, proposer l'inscription
+            if (data.register) {
+                document.getElementById('auth-message').innerHTML += '<div class="register-prompt">Vous n\'avez pas encore de compte ? <button type="button" onclick="showAuthForm(\'register\')">S\'inscrire</button></div>';
+            }
         }
     })
     .catch(error => {
@@ -82,6 +88,7 @@ function handleRegister(event) {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {
@@ -104,35 +111,35 @@ function handleRegister(event) {
 let originalAuthFormContent;
 
 // Afficher le formulaire de mot de passe oublié
-function showForgotPasswordForm() {
+function showForgotPassword() {
     // Sauvegarder le contenu original du formulaire
-    originalAuthFormContent = document.getElementById('auth-form').innerHTML;
+    originalAuthFormContent = document.getElementById('auth-form-element').innerHTML;
     
     // Remplacer par le formulaire de mot de passe oublié
-    document.getElementById('auth-form').innerHTML = `
-        <h2>Mot de passe oublié</h2>
-        <p>Veuillez entrer votre adresse email pour recevoir un lien de réinitialisation.</p>
-        <form id="forgot-password-form">
-            <div>
-                <label for="forgot-email">Email</label>
-                <input type="email" id="forgot-email" name="email" required>
-            </div>
-            <div class="form-buttons">
-                <button type="button" onclick="backToLogin()">Retour</button>
-                <button type="submit">Envoyer</button>
-            </div>
-        </form>
-        <div id="forgot-message"></div>
+    document.getElementById('auth-form-element').innerHTML = `
+        <div class="form-group">
+            <label for="forgot-email">Email</label>
+            <input type="email" id="forgot-email" name="email" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Envoyer</button>
+            <button type="button" onclick="backToLogin()">Retour</button>
+        </div>
     `;
     
+    // Changer le titre
+    document.getElementById('auth-title').textContent = 'Mot de passe oublié';
+    
     // Ajouter l'événement de soumission
-    document.getElementById('forgot-password-form').onsubmit = handleForgotPassword;
+    document.getElementById('auth-form-element').onsubmit = handleForgotPassword;
 }
 
 // Revenir au formulaire de connexion
 function backToLogin() {
-    document.getElementById('auth-form').innerHTML = originalAuthFormContent;
+    document.getElementById('auth-form-element').innerHTML = originalAuthFormContent;
     document.getElementById('auth-form-element').onsubmit = handleLogin;
+    document.getElementById('auth-title').textContent = 'Connexion';
+    document.getElementById('auth-message').innerHTML = '';
 }
 
 // Gérer la soumission du formulaire de mot de passe oublié
@@ -142,7 +149,7 @@ function handleForgotPassword(event) {
     const email = document.getElementById('forgot-email').value;
     
     // Afficher un message de chargement
-    document.getElementById('forgot-message').innerHTML = '<div class="loading">Traitement en cours...</div>';
+    document.getElementById('auth-message').innerHTML = '<div class="loading">Traitement en cours...</div>';
     
     // Envoyer la requête au serveur
     fetch('./modules/forgot_password.php', {
@@ -151,17 +158,27 @@ function handleForgotPassword(event) {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `email=${encodeURIComponent(email)}`,
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('forgot-message').innerHTML = `<div class="success">${data.message}</div>`;
+            document.getElementById('auth-message').innerHTML = `<div class="success">${data.message}</div>`;
+            
+            // En mode développement, afficher le lien de réinitialisation
+            if (data.dev_link) {
+                document.getElementById('auth-message').innerHTML += `
+                    <div class="dev-link">
+                        <p><strong>Lien de réinitialisation (mode développement uniquement):</strong></p>
+                        <a href="${data.dev_link}" target="_blank">${data.dev_link}</a>
+                    </div>`;
+            }
         } else {
-            document.getElementById('forgot-message').innerHTML = `<div class="error">${data.message}</div>`;
+            document.getElementById('auth-message').innerHTML = `<div class="error">${data.message}</div>`;
         }
     })
     .catch(error => {
-        document.getElementById('forgot-message').innerHTML = '<div class="error">Erreur de connexion au serveur</div>';
+        document.getElementById('auth-message').innerHTML = '<div class="error">Erreur de connexion au serveur</div>';
         console.error('Erreur:', error);
     });
 }

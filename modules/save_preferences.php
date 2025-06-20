@@ -33,28 +33,28 @@ if (isset($pdo) && $pdo !== null) {
             // Créer la table si elle n'existe pas
             $pdo->exec("CREATE TABLE IF NOT EXISTS user_preferences (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id VARCHAR(50) NOT NULL,
+                user_id INT NOT NULL,
                 preferences TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 UNIQUE KEY (user_id)
-            )");
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
         
         // Vérifier si des préférences existent déjà pour cet utilisateur
         $stmt = $pdo->prepare("SELECT id FROM user_preferences WHERE user_id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
+        $stmt->execute([(int)$_SESSION['user_id']]);
         
         $preferences = json_encode(['zones' => $data['zones']]);
         
         if ($stmt->fetch()) {
             // Mettre à jour les préférences existantes
             $stmt = $pdo->prepare("UPDATE user_preferences SET preferences = ?, updated_at = NOW() WHERE user_id = ?");
-            $stmt->execute([$preferences, $_SESSION['user_id']]);
+            $stmt->execute([$preferences, (int)$_SESSION['user_id']]);
         } else {
             // Insérer de nouvelles préférences
             $stmt = $pdo->prepare("INSERT INTO user_preferences (user_id, preferences) VALUES (?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $preferences]);
+            $stmt->execute([(int)$_SESSION['user_id'], $preferences]);
         }
     } catch (PDOException $e) {
         error_log('Erreur de base de données: ' . $e->getMessage());

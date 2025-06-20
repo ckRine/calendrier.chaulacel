@@ -1,0 +1,28 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    {% include 'header/header.twig' %}
+    {% include 'auth/auth-form.twig' %}
+    {% include 'controls/controls.twig' %}
+    {% include 'day-popup.twig' %}
+    
+    <div class="calendar-container">
+        <div class="nav">
+            <button onclick="prevMonths()">◄ Reculer</button>
+            <select id="year" onchange="updateYear(this.value)">
+                {% for i in range((now|date('Y'))-5, (now|date('Y'))+5) %}
+                    <option value="{{ i }}" {% if i == now|date('Y') %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+            </select>
+            <button onclick="nextMonths()">Avancer ►</button>
+            <button onclick="goToToday()">Aujourd'hui</button>
+            <div class="goto-date">
+                <input type="date" id="date-picker" aria-label="Aller à une date">
+                <button onclick="goToDate()">Aller à</button>
+            </div>
+        </div>
+        <div class="calendar-nav prev" onclick="prevMonths()">&lt;</div>
+        <div class="calendar" id="calendar"></div>
+        <div class="calendar-nav next" onclick="nextMonths()">&gt;</div>
+    </div>
+{% endblock %}

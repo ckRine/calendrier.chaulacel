@@ -1,0 +1,111 @@
+/* Styles pour l'impression du calendrier */
+
+@media print {
+    /* Masquer les éléments non nécessaires pour l'impression */
+    .nav, 
+    .calendar-nav, 
+    .user-menu, 
+    .auth-buttons,
+    .goto-date,
+    #auth-modal,
+    .day-popup {
+        display: none !important;
+    }
+    
+    /* Ajuster le conteneur principal */
+    .container {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Ajuster le conteneur du calendrier */
+    .calendar-container {
+        display: block;
+        width: 100%;
+        overflow: visible;
+    }
+    
+    /* Ajuster l'affichage du calendrier */
+    .calendar {
+        display: block;
+        width: 100%;
+        overflow: visible;
+        flex-wrap: wrap;
+    }
+    
+    /* Ajuster l'affichage des mois */
+    .month {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    /* Ajuster les jours */
+    .day {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Améliorer la visibilité des jours fériés et vacances */
+    .holiday {
+        background-color: #f8f8f8 !important;
+        color: #000 !important;
+    }
+    
+    .school-holiday {
+        background-color: #f0f0f0 !important;
+    }
+    
+    /* Assurer que les barres de vacances sont visibles */
+    .vacation-bar.active {
+        border: 1px solid #000;
+        height: 4px;
+    }
+    
+    .vacation-bar.zone-a.active {
+        background-color: #ccc !important;
+    }
+    
+    .vacation-bar.zone-b.active {
+        background-color: #999 !important;
+    }
+    
+    .vacation-bar.zone-c.active {
+        background-color: #666 !important;
+    }
+    
+    /* Améliorer la lisibilité du texte */
+    .day-number {
+        font-weight: bold;
+        font-size: 14px;
+    }
+    
+    .holiday-name {
+        font-size: 10px;
+        font-weight: normal;
+    }
+    
+    /* Ajouter une légende pour les zones */
+    .calendar::after {
+        content: "Légende: Zone A (gris clair), Zone B (gris moyen), Zone C (gris foncé)";
+        display: block;
+        margin-top: 20px;
+        font-size: 12px;
+        text-align: center;
+    }
+    
+    /* Optimiser pour le noir et blanc */
+    body {
+        color: black;
+        background: white;
+    }
+    
+    /* Forcer l'affichage des couleurs de fond */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

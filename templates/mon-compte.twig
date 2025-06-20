@@ -1,0 +1,67 @@
+{% extends "base.twig" %}
+
+{% block title %}Mon compte - ChronoGestCal{% endblock %}
+
+{% block content %}
+    {% include 'header/header.twig' %}
+    
+    <div class="account-container">
+        <h1>Mon compte</h1>
+        
+        {% if is_logged_in %}
+            <div class="account-section">
+                <h2>Informations personnelles</h2>
+                <div class="account-info">
+                    <p><strong>Email :</strong> {{ user_email }}</p>
+                </div>
+            </div>
+            
+            <div class="account-section">
+                <h2>Préférences</h2>
+                <div class="preferences-form">
+                    <h3>Zones de vacances scolaires</h3>
+                    <div class="zones-selection">
+                        <label>
+                            <input type="checkbox" value="A" class="zone-checkbox" {% if 'A' in selectedZones %}checked{% endif %}>
+                            Zone A
+                        </label>
+                        <label>
+                            <input type="checkbox" value="B" class="zone-checkbox" {% if 'B' in selectedZones %}checked{% endif %}>
+                            Zone B
+                        </label>
+                        <label>
+                            <input type="checkbox" value="C" class="zone-checkbox" {% if 'C' in selectedZones %}checked{% endif %}>
+                            Zone C
+                        </label>
+                    </div>
+                    <button id="save-preferences">Enregistrer les préférences</button>
+                </div>
+            </div>
+            
+            <div class="account-section">
+                <h2>Google Calendar</h2>
+                <div id="google-auth-container">
+                    <!-- Le contenu sera chargé dynamiquement par JavaScript -->
+                </div>
+                <div id="google-calendars-list" style="display: none;">
+                    <h3>Calendriers disponibles</h3>
+                    <div id="google-calendars-checkboxes">
+                        <!-- La liste des calendriers sera chargée dynamiquement par JavaScript -->
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="not-logged-in">
+                <p>Vous devez être connecté pour accéder à cette page.</p>
+                <button onclick="showAuthForm('login')">Se connecter</button>
+            </div>
+        {% endif %}
+    </div>
+    
+    {% include 'auth/auth-form.twig' %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ STATICS_PATH }}/js/account.js"></script>
+{% endblock %}

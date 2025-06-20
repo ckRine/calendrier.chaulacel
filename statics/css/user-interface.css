@@ -1,0 +1,76 @@
+/* 
+ * Calendrier Chaulacel - User Interface CSS
+ * Styles pour les éléments d'interface utilisateur
+ */
+
+/* Menu utilisateur */
+.auth-controls {
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.user-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar-container {
+    cursor: pointer;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-circle);
+    background-color: #3498db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: var(--font-lg);
+}
+
+/* Menu déroulant utilisateur */
+.user-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+}
+
+.user-dropdown.show {
+    display: block;
+}
+
+.user-info {
+    padding: var(--spacing-sm);
+    text-align: center;
+    font-weight: bold;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--bg-header);
+    margin: 5px 0;
+}
+
+.user-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px var(--spacing-sm);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+
+.user-dropdown button:hover {
+    background-color: #f1f1f1;
+}

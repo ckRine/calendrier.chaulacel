@@ -12,10 +12,7 @@
 			object-src 'none';
 		">
 		<title>Mon Compte - Calendrier</title>
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/styles.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/account.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/google-calendar.css">
-		<link rel="stylesheet" href="statics/css/logo.css">
+		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/main.css">
 		<script>
 			const STATICS_PATH = '<?= STATICS_PATH ?>';
 			const MODULES_PATH = '<?= MODULES_PATH ?>';

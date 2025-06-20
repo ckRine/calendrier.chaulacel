@@ -75,6 +75,36 @@ function isDarkColor(color) {
 	return luminance < 128;
 }
 
+// Fonction pour charger les préférences utilisateur
+function loadPreferences() {
+    return fetch('./modules/get_user_preferences.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Mettre à jour les calendriers sélectionnés
+                if (data.preferences && data.preferences.calendars) {
+                    window.selectedCalendars = data.preferences.calendars;
+                }
+                console.log('Préférences chargées:', data);
+                return data;
+            } else {
+                console.error('Erreur lors du chargement des préférences:', data.message);
+                return null;
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des préférences:', error);
+            // En cas d'erreur, continuer quand même avec les événements Google
+            fetchGoogleEvents(0);
+            return null;
+        });
+}
+
 // Vérifier l'état de l'authentification Google
 function checkGoogleAuth() {
 	fetch('./modules/check_google_auth.php')
@@ -241,8 +271,9 @@ function fetchGoogleEvents(offset = 0) {
         return;
     }
     
-    // Vérifier si on est sur la page principale du calendrier
+    // Vérifier si on est sur la page principale du calendrier ou la page agenda
     const isCalendarPage = document.getElementById('calendar') !== null;
+    const isAgendaPage = document.getElementById('agenda-grid') !== null;
     
     // Utiliser l'année et le mois actuels si on n'est pas sur la page principale
     let year = new Date().getFullYear();
@@ -252,6 +283,12 @@ function fetchGoogleEvents(offset = 0) {
     if (isCalendarPage && typeof yearSelect !== 'undefined' && yearSelect !== null) {
         year = parseInt(yearSelect.value);
         month = centralDate.getMonth() + 1;
+    }
+    
+    // Si on est sur la page agenda, utiliser la date courante de l'agenda
+    if (isAgendaPage && typeof currentDate !== 'undefined') {
+        year = currentDate.getFullYear();
+        month = currentDate.getMonth() + 1;
     }
     
     fetch(`./modules/fetch_google_events.php?year=${year}&month=${month}&offset=${offset}`)
@@ -272,6 +309,11 @@ function fetchGoogleEvents(offset = 0) {
                 // Rafraîchir le calendrier si on est sur la page d'accueil
                 if (document.getElementById('calendar')) {
                     renderVisibleMonths();
+                }
+                
+                // Rafraîchir l'agenda si on est sur la page agenda
+                if (document.getElementById('agenda-grid') && typeof renderAgenda === 'function') {
+                    renderAgenda(currentDate);
                 }
             } else if (data.needAuth) {
                 // Token expiré, déconnecter l'utilisateur
@@ -367,7 +409,7 @@ function renderGoogleEvents(date, dayDiv) {
 			const eventDate = event.start.substring(0, 10);
 			// Vérifier si le calendrier est sélectionné ou si aucun calendrier n'est sélectionné
 			const isCalendarSelected = window.selectedCalendars.length === 0 || window.selectedCalendars.includes(event.calendarId);
-			return eventDate === dateStr && isCalendarSelected;
+			return eventDate === dateStr && isCalendarSelected && !event.id.startsWith('Weeknum');
 	});
 	
 	// Ajouter les événements au jour
@@ -415,6 +457,11 @@ function renderGoogleEvents(date, dayDiv) {
 
 // Initialiser l'intégration Google Calendar au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-	// Attendre que le calendrier soit initialisé
+	// Attendre que le calendrier ou l'agenda soit initialisé
 	setTimeout(initGoogleCalendar, 500);
+	
+	// Exposer les variables et fonctions nécessaires pour l'agenda
+	window.googleEvents = googleEvents;
+	window.googleConnected = googleConnected;
+	window.fetchGoogleEvents = fetchGoogleEvents;
 });

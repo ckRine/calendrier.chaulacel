@@ -1,0 +1,67 @@
+/* 
+ * Calendrier Chaulacel - Variables CSS
+ * Définition des variables CSS globales
+ */
+
+:root {
+    /* Couleurs des zones */
+    --zone-a: #FF9800;
+    --zone-b: #03a9f4;
+    --zone-c: #8bc34a;
+    
+    /* Couleurs principales */
+    --today: #7d9fbb;
+    --primary: #0066cc;
+    --secondary: #4CAF50;
+    --danger: #d60000;
+    --warning: #f6c026;
+    
+    /* Couleurs de fond */
+    --bg-light: #ffffff;
+    --bg-gray: #f9f9f9;
+    --bg-holiday: #ffcccc;
+    --bg-saturday: #e6ffe6;
+    --bg-sunday: #fff0e6;
+    --bg-header: #e0e0e0;
+    
+    /* Couleurs de texte */
+    --text-dark: #333;
+    --text-medium: #555;
+    --text-light: #666;
+    
+    /* Bordures */
+    --border-light: #eee;
+    --border-medium: #ddd;
+    --border-dark: #ccc;
+    
+    /* Ombres */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.2);
+    
+    /* Espacements */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    
+    /* Rayons de bordure */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 20px;
+    --radius-circle: 50%;
+    
+    /* Tailles de police */
+    --font-xs: 9px;
+    --font-sm: 12px;
+    --font-md: 16px;
+    --font-lg: 18px;
+    --font-xl: 24px;
+    
+    /* Z-index */
+    --z-dropdown: 100;
+    --z-modal: 1000;
+    --z-popup: 1000;
+    --z-overlay: 1001;
+    --z-modal-content: 1002;
+}

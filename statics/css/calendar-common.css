@@ -1,0 +1,52 @@
+/* 
+ * Calendrier Chaulacel - Calendar Common CSS
+ * Styles communs pour toutes les vues du calendrier
+ */
+
+/* Boîtes de couleur pour les zones */
+.color-box {
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    color: #fff;
+}
+
+.color-box.zone-a {
+    background-color: var(--zone-a);
+}
+
+.color-box.zone-b {
+    background-color: var(--zone-b);
+}
+
+.color-box.zone-c {
+    background-color: var(--zone-c);
+}
+
+/* Barres de vacances */
+.vacation-bars {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: var(--spacing-xs);
+    width: 20px;
+}
+
+.vacation-bar {
+    width: 5px;
+    flex: 1;
+}
+
+.vacation-bar.active.zone-a {
+    background: var(--zone-a);
+}
+
+.vacation-bar.active.zone-b {
+    background: var(--zone-b);
+}
+
+.vacation-bar.active.zone-c {
+    background: var(--zone-c);
+}

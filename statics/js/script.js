@@ -153,12 +153,23 @@ async function logout() {
 
 async function savePreferences() {
 	try {
+		console.log("Sauvegarde des préférences:", selectedZones);
 		const response = await fetch('./modules/save_preferences.php', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ zones: selectedZones })
 		});
-		const data = await response.json();
+		const text = await response.text();
+		let data;
+		try {
+			data = JSON.parse(text);
+		} catch (e) {
+			console.error("Réponse non-JSON:", text);
+			alert("Erreur serveur: réponse invalide");
+			return;
+		}
+		
+		console.log("Réponse du serveur:", data);
 		
 		// Créer un élément de message temporaire
 		const messageDiv = document.createElement('div');
@@ -261,12 +272,15 @@ async function renderVisibleMonths() {
 	yearSelect.value = centerYear;
 
 	const holidays = await fetchHolidays(centerYear);
+	window.holidays = holidays; // Rendre les jours fériés disponibles globalement
+	
 	const schoolHolidays = { A: {}, B: {}, C: {} };
 	for (const zone of ['A', 'B', 'C']) {
 		if (selectedZones.includes(zone)) {
 			schoolHolidays[zone] = await fetchSchoolHolidays(centerYear, zone);
 		}
 	}
+	window.schoolHolidays = schoolHolidays; // Rendre les vacances scolaires disponibles globalement
 
 	for (let offset = -2; offset <= 2; offset++) {
 		const date = new Date(centerYear, centerMonth + offset, 1);
@@ -304,36 +318,55 @@ async function renderVisibleMonths() {
 			const dayDiv = document.createElement('div');
 			dayDiv.className = `day ${isToday ? 'today' : ''} ${isHoliday ? 'holiday' : ''} ${isSchoolHoliday ? 'school-holiday' : ''} ${isSaturday ? 'saturday' : ''} ${isSunday ? 'sunday' : ''}`;
 			
+			// Créer un conteneur pour les informations du jour (numéro et lettre)
+			const dayInfo = document.createElement('div');
+			dayInfo.className = 'day-info';
+			
 			// Ajouter le numéro du jour
 			const dayNumber = document.createElement('span');
 			dayNumber.className = 'day-number';
 			dayNumber.textContent = i;
-			dayDiv.appendChild(dayNumber);
+			dayNumber.onclick = function(event) {
+				event.stopPropagation();
+				showDayPopup(currentDate);
+			};
+			dayInfo.appendChild(dayNumber);
 			
 			// Ajouter la lettre du jour
 			const dayLetterSpan = document.createElement('span');
 			dayLetterSpan.className = 'day-letter';
 			dayLetterSpan.textContent = dayLetter;
-			dayDiv.appendChild(dayLetterSpan);
+			dayInfo.appendChild(dayLetterSpan);
 			
+			// Ajouter le conteneur supérieur au jour
+			dayDiv.appendChild(dayInfo);
+			
+			// Ajouter la lettre du jour
+			const dayEvents = document.createElement('div');
+			dayEvents.className = 'day-events';
+
 			// Ajouter le nom du jour férié si présent
 			if (displayText) {
-				const holidayName = document.createElement('span');
+				const holidayName = document.createElement('div');
 				holidayName.className = 'holiday-name';
+				holidayName.title = displayText; // Ajouter un titre pour afficher le texte complet au survol
 				holidayName.textContent = displayText;
-				dayDiv.appendChild(holidayName);
+				dayEvents.appendChild(holidayName);
 			}
+			
+			// Ajouter les événements Google Calendar si disponibles
+			if (typeof renderGoogleEvents === 'function') {
+				renderGoogleEvents(currentDate, dayEvents);
+			}
+			
+			// Ajouter le conteneur supérieur au jour
+			dayDiv.appendChild(dayEvents);
 			
 			// Ajouter les barres de vacances
 			const vacationBarsDiv = document.createElement('div');
 			vacationBarsDiv.className = 'vacation-bars';
 			vacationBarsDiv.innerHTML = vacationBars;
 			dayDiv.appendChild(vacationBarsDiv);
-			
-			// Ajouter les événements Google Calendar si disponibles
-			if (typeof renderGoogleEvents === 'function') {
-				renderGoogleEvents(currentDate, dayDiv);
-			}
 			
 			daysDiv.appendChild(dayDiv);
 		}
@@ -386,20 +419,20 @@ function prevYear() {
 }
 
 function prevMonths() {
-	centralDate.setMonth(centralDate.getMonth() - 1);
+	centralDate.setMonth(centralDate.getMonth() - 2);
 	renderVisibleMonths();
 	// Mettre à jour les événements Google Calendar si connecté
 	if (typeof googleConnected !== 'undefined' && googleConnected) {
-		fetchGoogleEvents(-1);
+		fetchGoogleEvents(-2);
 	}
 }
 
 function nextMonths() {
-	centralDate.setMonth(centralDate.getMonth() + 1);
+	centralDate.setMonth(centralDate.getMonth() + 2);
 	renderVisibleMonths();
 	// Mettre à jour les événements Google Calendar si connecté
 	if (typeof googleConnected !== 'undefined' && googleConnected) {
-		fetchGoogleEvents(1);
+		fetchGoogleEvents(2);
 	}
 }
 
@@ -420,6 +453,21 @@ function goToToday() {
 	// Mettre à jour les événements Google Calendar si connecté
 	if (typeof googleConnected !== 'undefined' && googleConnected) {
 		fetchGoogleEvents(0);
+	}
+}
+
+function goToDate() {
+	const datePicker = document.getElementById('date-picker');
+	if (datePicker && datePicker.value) {
+		const selectedDate = new Date(datePicker.value);
+		centralDate = selectedDate;
+		currentYear = centralDate.getFullYear();
+		yearSelect.value = currentYear;
+		renderVisibleMonths();
+		// Mettre à jour les événements Google Calendar si connecté
+		if (typeof googleConnected !== 'undefined' && googleConnected) {
+			fetchGoogleEvents(0);
+		}
 	}
 }
 

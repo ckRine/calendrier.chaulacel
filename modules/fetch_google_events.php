@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 
 try {
 		// Définir le chemin absolu vers le répertoire racine
-		$root_path = $_SERVER['DOCUMENT_ROOT'].'/calendrier.chaulacel';
+		$root_path = dirname(dirname(__FILE__));
 		require_once $root_path.'/common/conf.php';
 
 		// Vérifier si l'utilisateur est connecté
@@ -165,11 +165,11 @@ try {
 				$calendarName = $calendarListEntry->getSummary();
 				$calendarColorId = $calendarListEntry->getColorId();
 				$calendarBackgroundColor = $calendarListEntry->getBackgroundColor() ?: 
-																($calendarColorId && isset($calendarColors[$calendarColorId]) ? 
-																$calendarColors[$calendarColorId]->getBackground() : '#4285F4');
+														($calendarColorId && isset($calendarColors[$calendarColorId]) ? 
+														$calendarColors[$calendarColorId]->getBackground() : '#4285F4');
 				$calendarForegroundColor = $calendarListEntry->getForegroundColor() ?: 
-																($calendarColorId && isset($calendarColors[$calendarColorId]) ? 
-																$calendarColors[$calendarColorId]->getForeground() : '#FFFFFF');
+														($calendarColorId && isset($calendarColors[$calendarColorId]) ? 
+														$calendarColors[$calendarColorId]->getForeground() : '#FFFFFF');
 				
 				$formattedCalendars[] = [
 						'id' => $calendarId,
@@ -194,18 +194,39 @@ try {
 										$end = $event->end->date;
 								}
 								
+								// Formater les heures pour l'affichage
+								$startTime = '';
+								$endTime = '';
+								
+								if (strpos($start, 'T') !== false) {
+										// Format datetime
+										$startDateTime = new DateTime($start);
+										$startTime = $startDateTime->format('H:i');
+								} else {
+										// Format date (toute la journée)
+										$startTime = 'Toute la journée';
+								}
+								
+								if (strpos($end, 'T') !== false && $startTime !== 'Toute la journée') {
+										// Format datetime
+										$endDateTime = new DateTime($end);
+										$endTime = $endDateTime->format('H:i');
+								}
+								
 								// Déterminer la couleur de l'événement
 								$eventColorId = $event->getColorId();
 								$eventBackgroundColor = $eventColorId && isset($eventColors[$eventColorId]) ? 
-																		$eventColors[$eventColorId]->getBackground() : $calendarBackgroundColor;
+																$eventColors[$eventColorId]->getBackground() : $calendarBackgroundColor;
 								$eventForegroundColor = $eventColorId && isset($eventColors[$eventColorId]) ? 
-																		$eventColors[$eventColorId]->getForeground() : $calendarForegroundColor;
+																$eventColors[$eventColorId]->getForeground() : $calendarForegroundColor;
 								
 								$formattedEvents[] = [
 										'id' => $event->id,
 										'title' => $event->getSummary(),
 										'start' => $start,
 										'end' => $end,
+										'startTime' => $startTime,
+										'endTime' => $endTime,
 										'description' => $event->getDescription(),
 										'source' => 'google',
 										'calendarId' => $calendarId,

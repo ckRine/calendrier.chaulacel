@@ -36,7 +36,7 @@ if ($isConnected) {
     if (isset($pdo) && $pdo !== null) {
         try {
             $stmt = $pdo->prepare("SELECT preferences FROM user_preferences WHERE user_id = ?");
-            $stmt->execute([$_SESSION['user_id']]);
+            $stmt->execute([(int)$_SESSION['user_id']]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($result) {

@@ -1,0 +1,35 @@
+/* 
+ * Calendrier Chaulacel - Main CSS
+ * Fichier CSS principal qui importe tous les modules CSS
+ */
+
+/* Variables et styles de base */
+@import 'variables.css';
+@import 'base.css';
+
+/* Structure et mise en page */
+@import 'layout.css';
+
+/* Composants du calendrier */
+@import 'calendar-common.css';
+@import 'calendar-monthly.css';
+@import 'agenda.css';
+@import 'day-popup.css';
+
+/* Interface utilisateur */
+@import 'user-interface.css';
+@import 'forms.css';
+@import 'modals.css';
+@import 'dropdown.css';
+
+/* Fonctionnalités spécifiques */
+@import 'auth.css';
+@import 'account.css';
+@import 'google-calendar.css';
+@import 'export-dialog.css';
+@import 'print-dialog.css';
+@import 'logo.css';
+
+/* Utilitaires */
+@import 'print.css';
+@import 'utilities.css';

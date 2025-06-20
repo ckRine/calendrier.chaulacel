@@ -1,0 +1,53 @@
+/* 
+ * Calendrier Chaulacel - Layout CSS
+ * Styles pour la structure générale de la page
+ */
+
+/* En-tête */
+header {
+    align-items: center;
+    display: flex;
+    height: 50px;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Contrôles */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav button {
+    color: var(--primary);
+    margin: 0 var(--spacing-sm);
+    background: none;
+    border: 1px solid var(--border-dark);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+}
+
+.goto-date {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-left: var(--spacing-sm);
+}
+
+#date-picker {
+    padding: var(--spacing-xs);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+}

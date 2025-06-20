@@ -1,0 +1,44 @@
+/* 
+ * Calendrier Chaulacel - Base CSS
+ * Styles de base et réinitialisation
+ */
+
+/* Masquer les numéros de semaine */
+.week-number,
+.week-num,
+[class*="week-number"],
+[class*="weekNumber"],
+[data-event-id^="Weeknum"],
+[id^="Weeknum"],
+[event-id^="Weeknum"] {
+    display: none !important;
+}
+
+/* Global styles */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container */
+.container {
+    max-width: 1045px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: bold;
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-modal);
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}

@@ -8,8 +8,8 @@ require_once $root_path.'/common/conf.php';
 
 // Vérifier si les données nécessaires sont présentes
 if (!isset($_POST['token']) || !isset($_POST['password'])) {
-    echo json_encode(['success' => false, 'message' => 'Token et nouveau mot de passe requis']);
-    exit;
+	echo json_encode(['success' => false, 'message' => 'Token et nouveau mot de passe requis']);
+	exit;
 }
 
 $token = $_POST['token'];

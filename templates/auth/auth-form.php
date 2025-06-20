@@ -4,6 +4,7 @@
 		<span class="close-button" onclick="hideAuthForm()">&times;</span>
 		<div id="auth-form">
 			<h2 id="auth-title">Connexion</h2>
+			<div id="auth-message"></div>
 			<form id="auth-form-element">
 				<div>
 					<label for="email">Email</label>
@@ -23,9 +24,9 @@
 				<div class="form-buttons">
 					<button type="button" onclick="hideAuthForm()">Annuler</button>
 					<button type="submit">Valider</button>
+					<button type="button" id="register-button" onclick="showAuthForm('register')">S'inscrire</button>
 				</div>
 			</form>
-			<div id="auth-message"></div>
 		</div>
 	</div>
 </div>

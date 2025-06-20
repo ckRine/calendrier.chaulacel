@@ -26,10 +26,24 @@
 
 /* Événements Google Calendar */
 .google-events {
-	margin-right: 15px;
 	margin-top: 4px;
-	max-height: 60px;
+	max-height: 38px;
+	/* Hauteur pour 3 événements */
 	overflow-y: auto;
+	/* Auto au lieu de scroll pour n'afficher la barre que si nécessaire */
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	width: 100%;
+	/* Largeur fixe pour que les enfants puissent utiliser text-overflow */
+}
+
+.google-events::-webkit-scrollbar {
+	width: 4px;
+}
+
+.google-events::-webkit-scrollbar-thumb {
+	background-color: rgba(0, 0, 0, 0.2);
+	border-radius: 4px;
 }
 
 .google-event {
@@ -42,7 +56,13 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	max-width: 100%;
+	width: 100%;
+	/* Largeur fixe nécessaire pour text-overflow */
 	text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+	height: 17px;
+	box-sizing: border-box;
+	display: block;
+	/* Changé de flex à block pour que text-overflow fonctionne */
 }
 
 /* Couleurs par défaut des calendriers Google */

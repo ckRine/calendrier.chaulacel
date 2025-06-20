@@ -1,0 +1,30 @@
+<header>
+    <div class="logo">
+        <a href="index.php">ChronoGestCal</a>
+    </div>
+    <nav>
+        <a href="index.php" class="{{ current_page == 'calendrier' ? 'active' : '' }}">Calendrier</a>
+        <a href="agenda.php" class="{{ current_page == 'agenda' ? 'active' : '' }}">Agenda</a>
+        {% if is_logged_in %}
+            <a href="mon-compte.php" class="{{ current_page == 'mon-compte' ? 'active' : '' }}">Mon compte</a>
+        {% endif %}
+    </nav>
+    <div class="auth-controls">
+        {% if is_logged_in %}
+            <div class="user-menu">
+                <div class="avatar-container" onclick="toggleUserMenu()">
+                    <div class="avatar">{{ user.email|slice(0, 1)|upper }}</div>
+                </div>
+                <div class="user-dropdown" id="user-dropdown">
+                    <div class="user-info">{{ user.email }}</div>
+                    <div class="dropdown-divider"></div>
+                    <button onclick="window.location.href='mon-compte.php'">Mon compte</button>
+                    <button onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+        {% else %}
+            <button onclick="showAuthForm('login')">Connexion</button>
+            <button onclick="showAuthForm('register')">Inscription</button>
+        {% endif %}
+    </div>
+</header>

@@ -1,7 +1,7 @@
 <div class="auth-controls">
 	<?php if (isset($_SESSION['user_id'])): ?>
 		<div class="user-menu">
-			<div class="avatar-container" onclick="toggleUserMenu()">
+			<div class="avatar-container test" onclick="toggleUserMenu()">
 				<div class="avatar">
 					<span><?php echo strtoupper(substr($_SESSION['user_email'] ?? 'U', 0, 1)); ?></span>
 				</div>
@@ -11,7 +11,6 @@
 					<span><?php echo $_SESSION['user_email'] ?? 'Utilisateur'; ?></span>
 				</div>
 				<div class="dropdown-divider"></div>
-				<button onclick="savePreferences()">Sauvegarder préférences</button>
 				<a href="./mon-compte.php" class="dropdown-button">Mon compte</a>
 				<button onclick="forceLogout()" class="dropdown-button">Déconnexion</button>		</div>
 	<?php else: ?>

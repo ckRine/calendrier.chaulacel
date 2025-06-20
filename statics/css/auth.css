@@ -2,65 +2,68 @@
 
 /* Modal */
 .modal {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1000;
-}
-
-.modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
     position: relative;
     width: 90%;
     max-width: 400px;
-    margin: 50px auto;
     background-color: #fff;
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.close-button {
+.close {
     position: absolute;
     top: 10px;
-    right: 10px;
+    right: 15px;
     font-size: 24px;
+    font-weight: bold;
     cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #333;
+}
+
+/* Titre */
+#auth-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
 }
 
 /* Formulaire */
-#auth-form h2, 
-#auth-form p {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-#auth-form form div {
+.form-group {
     margin-bottom: 15px;
 }
 
-#auth-form label {
+.form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
 
-#auth-form input[type="email"],
-#auth-form input[type="password"] {
+.form-group input[type="email"],
+.form-group input[type="password"] {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    box-sizing: border-box;
 }
 
 .remember-me {
@@ -72,47 +75,45 @@
     margin-right: 8px;
 }
 
-.forgot-password {
-    text-align: right;
-    margin-bottom: 15px;
-    font-size: 0.9em;
-}
-
-.forgot-password a {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-.forgot-password a:hover {
-    text-decoration: underline;
-}
-
-.form-buttons {
+.form-actions {
     display: flex;
     justify-content: space-between;
+    margin-top: 20px;
 }
 
-.form-buttons button {
+.form-actions button {
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
-.form-buttons button[type="button"] {
+.form-actions button[type="button"] {
     background-color: #f2f2f2;
 }
 
-.form-buttons button[type="submit"] {
+.form-actions button[type="submit"] {
     background-color: #4CAF50;
     color: white;
 }
 
-/* Messages */
-#auth-message,
-#forgot-message,
-#reset-message {
+.form-links {
     margin-top: 15px;
+    text-align: center;
+}
+
+.form-links a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.form-links a:hover {
+    text-decoration: underline;
+}
+
+/* Messages */
+#auth-message {
+    margin-bottom: 15px;
 }
 
 .success {
@@ -135,6 +136,24 @@
     background-color: #e3f2fd;
     border-radius: 4px;
     text-align: center;
+}
+
+.register-prompt {
+    margin-top: 15px;
+    text-align: center;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.register-prompt button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
 }
 
 /* Page de réinitialisation de mot de passe */

@@ -4,6 +4,7 @@ if (!isset($_SESSION['user_id'])) {
 	header('Location: ./index.php');
 	exit;
 }
+	$page_name="mon-compte";
 ?>
 
 <div class="account-container">

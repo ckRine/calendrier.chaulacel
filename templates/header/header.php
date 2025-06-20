@@ -6,6 +6,7 @@
 			</a>
 		</div>
 	</div>
+	<?php include(TEMPLATES_PATH.'/navigation/navigation.php'); ?>
 	<span>ChronoGestCal</span>
 	<?php include(TEMPLATES_PATH.'/auth/auth-controls.php'); ?>
 </header>

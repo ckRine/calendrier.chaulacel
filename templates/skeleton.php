@@ -12,13 +12,8 @@
 			img-src 'self' data:;
 			object-src 'none';
 		">
-		<title>ChronoSphere</title>
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/styles.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/google-calendar.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/account.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/dropdown.css">
-		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/auth.css">
-		<link rel="stylesheet" href="statics/css/logo.css">
+		<title>ChronoGestCal</title>
+		<link rel="stylesheet" href="<?= STATICS_PATH ?>/css/main.css">
 		<script>
 			const STATICS_PATH = '<?= STATICS_PATH ?>';
 			const MODULES_PATH = '<?= MODULES_PATH ?>';
@@ -31,5 +26,8 @@
 		<script src="<?= STATICS_PATH ?>/js/script.js"></script>
 		<script src="<?= STATICS_PATH ?>/js/google-calendar.js"></script>
 		<script src="<?= STATICS_PATH ?>/js/auth.js"></script>
+		<script src="<?= STATICS_PATH ?>/js/day-popup.js"></script>
+		<script src="<?= STATICS_PATH ?>/js/print.js"></script>
+		<script src="<?= STATICS_PATH ?>/js/export.js"></script>
 	</body>
 </html>
