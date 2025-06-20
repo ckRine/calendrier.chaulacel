@@ -1,9 +1,37 @@
-AddDefaultCharset UTF-8
+# Activer les extensions PHP nécessaires
+<IfModule mod_php7.c>
+    php_flag display_errors On
+    php_value error_reporting E_ALL
+    
+    # Activer les extensions nécessaires
+    php_value extension json
+    
+    # Augmenter les limites de mémoire
+    php_value memory_limit 256M
+    php_value post_max_size 64M
+    php_value upload_max_filesize 64M
+    
+    # Augmenter le temps d'exécution
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
 
-RewriteEngine On
-RewriteBase /
+# Redirection vers HTTPS (décommentez si nécessaire)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-AddType application/x-httpd-php .php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [L]
+# Protection des fichiers sensibles
+<FilesMatch "^(\.htaccess|\.htpasswd|\.git|\.env|composer\.json|composer\.lock)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Permettre l'accès aux fichiers PHP
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Désactiver l'affichage du contenu des répertoires
+Options -Indexes
