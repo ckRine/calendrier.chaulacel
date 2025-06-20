@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/twig_compatibility.php';
 
 // Configuration de Twig
 $loader = new \Twig\Loader\FilesystemLoader(ROOT_PATH . '/templates');
