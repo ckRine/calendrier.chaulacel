@@ -1,4 +1,12 @@
 <?php
+/**
+ * Script de correction simple pour Twig
+ * À exécuter sur le serveur de production
+ */
+
+// Contenu du fichier twig.php modifié
+$content = <<<'EOD'
+<?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Configuration de Twig avec cache désactivé
@@ -51,3 +59,40 @@ function render_template($template, $data = []) {
     
     return $twig->render($template, $data);
 }
+EOD;
+
+// Chemin vers le fichier twig.php
+$twigPath = __DIR__ . '/common/twig.php';
+
+// Vérifier si le fichier existe
+if (!file_exists($twigPath)) {
+    die("Erreur: Le fichier twig.php n'existe pas à l'emplacement attendu.");
+}
+
+// Sauvegarder le fichier original
+if (!copy($twigPath, $twigPath . '.bak')) {
+    die("Erreur: Impossible de sauvegarder le fichier original.");
+}
+
+// Écrire le nouveau contenu dans le fichier
+if (!file_put_contents($twigPath, $content)) {
+    die("Erreur: Impossible d'écrire dans le fichier twig.php.");
+}
+
+echo "Succès: Le fichier twig.php a été modifié avec succès.\n";
+
+// Vider le cache Twig
+$cachePath = __DIR__ . '/cache/twig';
+if (is_dir($cachePath)) {
+    $files = glob($cachePath . '/*');
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            unlink($file);
+        }
+    }
+    echo "Succès: Le cache Twig a été vidé.\n";
+} else {
+    echo "Note: Le dossier de cache Twig n'existe pas.\n";
+}
+
+echo "Terminé. Veuillez recharger votre application.\n";
