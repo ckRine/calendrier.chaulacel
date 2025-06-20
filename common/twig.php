@@ -1,11 +1,10 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/twig_compatibility.php';
 
-// Configuration de Twig
+// Configuration de Twig - Désactivation du cache pour éviter les problèmes de json_encode
 $loader = new \Twig\Loader\FilesystemLoader(ROOT_PATH . '/templates');
 $twig = new \Twig\Environment($loader, [
-    'cache' => ROOT_PATH . '/cache/twig',
+    'cache' => false, // Désactiver le cache pour éviter les problèmes
     'debug' => true,
     'auto_reload' => true
 ]);

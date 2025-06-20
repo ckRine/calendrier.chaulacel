@@ -1,0 +1,69 @@
+<?php
+// Patch pour ExtensionSet.php
+// À appliquer manuellement sur le serveur de production
+
+namespace Twig;
+
+use Twig\Error\RuntimeError;
+use Twig\Extension\ExtensionInterface;
+use Twig\Extension\GlobalsInterface;
+use Twig\Extension\StagingExtension;
+use Twig\NodeVisitor\NodeVisitorInterface;
+use Twig\TokenParser\TokenParserInterface;
+
+class ExtensionSet
+{
+    private $extensions;
+    private $initialized = false;
+    private $runtimeInitialized = false;
+    private $staging;
+    private $parsers;
+    private $visitors;
+    private $filters;
+    private $tests;
+    private $functions;
+    private $unaryOperators;
+    private $binaryOperators;
+    private $globals;
+    private $functionCallbacks;
+    private $filterCallbacks;
+    private $parserCallbacks;
+    private $lastModified = 0;
+
+    public function __construct()
+    {
+        $this->staging = new StagingExtension();
+    }
+
+    public function addExtension(ExtensionInterface $extension)
+    {
+        $class = \get_class($extension);
+        if (isset($this->extensions[$class])) {
+            return;
+        }
+
+        if ($this->initialized) {
+            throw new \LogicException(sprintf('Unable to register extension "%s" as extensions have already been initialized.', $class));
+        }
+
+        $this->extensions[$class] = $extension;
+    }
+
+    public function getExtensions()
+    {
+        return $this->extensions;
+    }
+
+    // Méthode modifiée pour éviter l'utilisation de json_encode
+    public function getSignature()
+    {
+        // Utiliser serialize au lieu de json_encode
+        return serialize([
+            'functions' => array_keys($this->getFunctions()),
+            'filters' => array_keys($this->getFilters()),
+            'tests' => array_keys($this->getTests()),
+        ]);
+    }
+
+    // Reste du fichier inchangé...
+}
