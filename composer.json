@@ -3,6 +3,7 @@
     "description": "Calendrier pour le site Chaulacel",
     "type": "project",
     "require": {
+        "php": ">=7.2.0",
         "google/apiclient": "^2.15.0",
         "twig/twig": "^3.11"
     },
@@ -15,5 +16,10 @@
         {
             "name": "Chaulacel"
         }
-    ]
+    ],
+    "config": {
+        "platform": {
+            "php": "7.2.34"
+        }
+    }
 }
