@@ -25,10 +25,6 @@
 	padding: 15px;
 }
 
-.agenda-date-picker {
-	margin-bottom: 20px;
-}
-
 .agenda-date-picker h3 {
 	display: inline;
 	margin-right: 20px;
@@ -39,7 +35,6 @@
 
 .agenda-date-picker input[type="date"] {
 	padding: 8px;
-	margin-bottom: 10px;
 	border: 1px solid var(--border-medium);
 	border-radius: var(--radius-sm);
 }
@@ -95,7 +90,8 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 15px;
+	margin-bottom: 10px;
+	padding: 10px 15px;
 	background-color: #f9f9f9;
 	border-bottom: 1px solid var(--border-light);
 }
@@ -121,18 +117,20 @@
 /* Grille de l'agenda */
 .agenda-grid {
 	display: grid;
+	float: left;
+	gap: 2px 0;
 	grid-template-columns: 76px repeat(7, 87px);
-	grid-auto-rows: minmax(60px, auto);
+	grid-auto-rows: 50px;
 	height: 600px;
 	overflow-y: auto;
+	width: 70%;
 }
 
 .agenda-cell {
-	border-right: 1px solid var(--border-light);
-	border-bottom: 1px solid var(--border-light);
+	border: 1px solid var(--border-medium);
 	padding: 5px;
 	position: relative;
-	width: calc(100% - 50px / 7);
+	width: calc(100% - 29px / 7);
 	box-sizing: border-box;
 }
 
@@ -388,6 +386,77 @@
 	font-style: italic;
 	color: var(--text-light);
 	grid-column: 1 / -1;
+}
+
+.events-list {
+	float: left;
+	position: relative;
+	width: 30%;
+}
+
+.events-list h4 {
+	margin: 0 0 5px 5px;
+}
+
+.events-list #upcoming-prev {
+	position: absolute;
+}
+
+.events-list #upcoming-next {
+	bottom: -23px;
+	position: absolute;
+}
+
+/* Events list navigation buttons */
+.events-list-nav-btn {
+	font-size: 18px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	transition: opacity 0.2s;
+	width: 100%;
+}
+
+.events-list-nav-btn[disabled] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.chevron-arrow {
+	display: inline-block;
+	border-right: 4px solid black;
+	border-bottom: 4px solid black;
+	width: 10px;
+	height: 10px;
+	transform: rotate(-45deg);
+}
+
+#upcoming-prev .chevron-arrow {
+	transform: rotate(230deg);
+}
+
+#upcoming-next .chevron-arrow {
+	transform: rotate(45deg);
+}
+
+/* Events List */
+.upcoming-events {
+	list-style: none;
+	padding: 0 15px;
+}
+
+/* Events list item */
+.upcoming-event {
+	border-left: 4px solid #4285F4;
+	border-radius: 0 5px 5px 0;
+	padding: 6px;
+	margin-bottom: 5px;
+	background-color: #f8f2f2;
+}
+
+.upcoming-event.past {
+	opacity: 0.5;
+	filter: grayscale(0.7);
 }
 
 /* Responsive */

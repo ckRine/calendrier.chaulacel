@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Configuration de Twig avec cache désactivé
-$loader = new \Twig\Loader\FilesystemLoader(ROOT_PATH . '/templates');
+$loader = new \Twig\Loader\FilesystemLoader(TEMPLATES_PATH);
 
 // Solution simple: désactiver complètement le cache et ne pas ajouter d'extensions
 $twig = new \Twig\Environment($loader, [

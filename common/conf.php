@@ -7,7 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Déterminer l'environnement (dev ou prod)
-$is_prod = (strpos($_SERVER['HTTP_HOST'], 'localhost') === false && strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false);
+$http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+$is_prod = (strpos($http_host, 'localhost') === false && strpos($http_host, '127.0.0.1') === false);
 
 // Définir les chemins selon l'environnement
 if ($is_prod) {
@@ -18,7 +19,7 @@ if ($is_prod) {
     define('ROOT_PATH', dirname(__DIR__));
 }
 
-define('TEMPLATES_PATH', ROOT_PATH.'/templates');
+define('TEMPLATES_PATH', ROOT_PATH . '/templates');
 define('STATICS_PATH', './statics');
 define('MODULES_PATH', './modules');
 
@@ -97,13 +98,13 @@ if (isset($_GET['logout']) && $_GET['logout'] == 1) {
 	session_destroy();
 		
     // Rediriger vers la page d'accueil
-	header('Location: ./index.php');
+	header('Location: calendrier');
 	exit;
 }
 
 // Configuration de la base de données
 $db_host = 'localhost';
-$db_name = 'chronogestcal'; // Nom de la base de données
+$db_name = 'chaulacel'; // Nom de la base de données
 $db_user = 'root';
 $db_pass = '';
 
@@ -137,6 +138,16 @@ if (class_exists('PDO')) {
             token VARCHAR(64) NOT NULL,
             expiry DATETIME NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_user_id (user_id)
+        )");
+        
+        // Créer la table google_tokens si elle n'existe pas
+        $pdo->exec("CREATE TABLE IF NOT EXISTS google_tokens (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            token TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY unique_user_id (user_id)
         )");
         

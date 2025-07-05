@@ -8,18 +8,18 @@ window.selectedCalendars = [];
 
 // Initialiser l'intégration Google Calendar
 function initGoogleCalendar() {
-	// Vérifier si l'utilisateur est connecté à Google Calendar
-	// Uniquement si nous sommes sur la page Mon compte ou si l'utilisateur est déjà connecté
-	const isAccountPage = document.getElementById('google-calendar-container') !== null;
-	
-	// Vérifier l'authentification Google dans tous les cas
-	// Si l'utilisateur était précédemment connecté à Google, il sera reconnecté automatiquement
-	checkGoogleAuth();
-	
+	// Vérifier si l'utilisateur est sur la page Mon compte
+	const isAccountPage = document.getElementById('google-auth-container') !== null;
+
+	// Toujours ajouter le bouton sur la page Mon compte
 	if (isAccountPage) {
-		// Ajouter le bouton de connexion à Google Calendar
 		addGoogleCalendarButton();
-		
+	}
+
+	// Vérifier l'authentification Google dans tous les cas
+	checkGoogleAuth();
+
+	if (isAccountPage) {
 		// Écouter les messages de la fenêtre d'authentification
 		window.addEventListener('message', function(event) {
 			if (event.data === 'google-auth-success') {
@@ -105,27 +105,48 @@ function loadPreferences() {
         });
 }
 
+// Vérifie si la connexion Google Calendar fonctionne réellement
+async function testGoogleCalendarConnection() {
+	try {
+		const response = await fetch('./modules/fetch_google_events.php?test=1');
+		const data = await response.json();
+		if (!data.success && data.needAuth) {
+			// Token invalide ou expiré, déconnecter l'utilisateur
+			console.warn('Connexion Google Calendar invalide, déconnexion...');
+			disconnectGoogleCalendar();
+			return false;
+		}
+		return true;
+	} catch (e) {
+		console.error('Erreur lors du test de connexion Google Calendar:', e);
+		disconnectGoogleCalendar();
+		return false;
+	}
+}
+
 // Vérifier l'état de l'authentification Google
 function checkGoogleAuth() {
 	fetch('./modules/check_google_auth.php')
 		.then(response => {
 			if (!response.ok) {
-					throw new Error('Erreur réseau');
+				throw new Error('Erreur réseau');
 			}
 			return response.json();
 		})
-		.then(data => {
+		.then(async data => {
 			console.log('État de l\'authentification Google:', data);
 			googleConnected = data.connected;
 			updateGoogleCalendarButton();
-			
+
 			if (googleConnected) {
+				// Teste la connexion réelle à Google Calendar
+				const ok = await testGoogleCalendarConnection();
+				if (!ok) return;
 				// Charger les préférences utilisateur
 				loadPreferences().then(() => {
-						fetchGoogleEvents(0);
+					fetchGoogleEvents(0);
 				});
 			} else if (data.should_auto_connect) {
-				// Si l'utilisateur a choisi de se connecter automatiquement à Google Calendar
 				connectGoogleCalendar();
 			}
 		})
@@ -136,34 +157,37 @@ function checkGoogleAuth() {
 
 // Ajouter le bouton Google Calendar aux contrôles
 function addGoogleCalendarButton() {
-	// Créer le bouton
+	const container = document.getElementById('google-auth-container');
+	if (!container) return;
+
+	// Supprimer tout bouton existant pour éviter les doublons
+	const existingBtn = document.getElementById('google-calendar-button');
+	if (existingBtn) existingBtn.remove();
+
 	const googleButton = document.createElement('button');
 	googleButton.id = 'google-calendar-button';
 	googleButton.onclick = handleGoogleCalendarClick;
-	
-	// Chercher uniquement le conteneur dans la page Mon compte
-	const container = document.getElementById('google-calendar-container');
-	
-	// Ajouter le bouton uniquement si le conteneur existe (page Mon compte)
-	if (container) {
-		container.appendChild(googleButton);
-		updateGoogleCalendarButton();
-	}
+	container.appendChild(googleButton);
+
+	updateGoogleCalendarButton();
 }
 
 // Mettre à jour l'apparence du bouton Google Calendar
 function updateGoogleCalendarButton() {
 	const button = document.getElementById('google-calendar-button');
-	
 	if (button) {
-			button.textContent = googleConnected ? 'Déconnecter Google Calendar' : 'Connecter Google Calendar';
-			button.className = googleConnected ? 'google-connected' : 'google-disconnected';
+		button.textContent = googleConnected ? 'Déconnecter Google Calendar' : 'Connecter Google Calendar';
+		button.className = googleConnected ? 'google-connected' : 'google-disconnected';
 	}
-	
 	// Afficher ou masquer la liste des calendriers
 	const calendarsList = document.getElementById('google-calendars-list');
 	if (calendarsList) {
 		calendarsList.style.display = googleConnected ? 'block' : 'none';
+	}
+	// Afficher ou masquer le bouton de déconnexion Google Calendar sur la page Mon compte
+	const disconnectDiv = document.getElementById('google-calendar-disconnect');
+	if (disconnectDiv) {
+		disconnectDiv.style.display = googleConnected ? 'block' : 'none';
 	}
 }
 
@@ -179,37 +203,35 @@ function handleGoogleCalendarClick() {
 // Connecter à Google Calendar
 function connectGoogleCalendar() {
 	fetch('./modules/google_auth.php')
-			.then(response => {
-					if (!response.ok) {
-							throw new Error('Erreur réseau');
+		.then(response => {
+			if (!response.ok) {
+				throw new Error('Erreur réseau');
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('Réponse de google_auth.php:', data);
+			if (data.success && data.authUrl) {
+				// Ouvrir une nouvelle fenêtre pour l'authentification Google
+				const authWindow = window.open(data.authUrl, 'GoogleAuth', 'width=600,height=600');
+				// Vérifier périodiquement si l'authentification est terminée
+				const checkAuth = setInterval(() => {
+					if (authWindow && authWindow.closed) {
+						clearInterval(checkAuth);
+						checkGoogleAuth();
+						// Sauvegarder l'état de connexion dans les préférences utilisateur
+						saveGoogleConnectionState(true);
 					}
-					return response.json();
-			})
-			.then(data => {
-					console.log('Réponse de google_auth.php:', data);
-					if (data.success && data.authUrl) {
-							// Ouvrir une nouvelle fenêtre pour l'authentification Google
-							const authWindow = window.open(data.authUrl, 'GoogleAuth', 'width=600,height=600');
-							
-							// Vérifier périodiquement si l'authentification est terminée
-							const checkAuth = setInterval(() => {
-									if (authWindow.closed) {
-											clearInterval(checkAuth);
-											checkGoogleAuth();
-											
-											// Sauvegarder l'état de connexion dans les préférences utilisateur
-											saveGoogleConnectionState(true);
-									}
-							}, 1000);
-					} else {
-							console.error('Erreur lors de la génération de l\'URL d\'authentification:', data.message);
-							alert('Erreur: ' + data.message);
-					}
-			})
-			.catch(error => {
-					console.error('Erreur lors de la connexion à Google Calendar:', error);
-					alert('Erreur de connexion à Google Calendar. Vérifiez la console pour plus de détails.');
-			});
+				}, 1000);
+			} else {
+				console.error('Erreur lors de la génération de l\'URL d\'authentification:', data.message);
+				alert('Erreur: ' + data.message);
+			}
+		})
+		.catch(error => {
+			console.error('Erreur lors de la connexion à Google Calendar:', error);
+			alert('Erreur de connexion à Google Calendar. Vérifiez la console pour plus de détails.');
+		});
 }
 
 // Déconnecter de Google Calendar
@@ -331,19 +353,25 @@ function fetchGoogleEvents(offset = 0) {
 // Mettre à jour la liste des calendriers dans la page Mon compte
 function updateCalendarsList() {
     const container = document.getElementById('google-calendars-checkboxes');
-    if (!container || !googleCalendars || googleCalendars.length === 0) {
+    if (!container) {
         return;
     }
-    
+
     // Vider le conteneur
     container.innerHTML = '';
-    
+
+    if (!googleCalendars || googleCalendars.length === 0) {
+        // Afficher un message si aucun calendrier n'est disponible
+        container.innerHTML = '<div class="text-danger">Aucun calendrier Google disponible.</div>';
+        return;
+    }
+
     // Ajouter un checkbox pour chaque calendrier
     googleCalendars.forEach(calendar => {
         const label = document.createElement('label');
         label.className = 'calendar-checkbox';
         label.style.borderLeft = `4px solid ${calendar.backgroundColor}`;
-        
+
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.value = calendar.id;
@@ -351,7 +379,7 @@ function updateCalendarsList() {
         checkbox.onchange = function() {
             toggleCalendar(calendar.id, this.checked);
         };
-        
+
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(` ${calendar.name}`));
         container.appendChild(label);
@@ -392,6 +420,38 @@ function saveCalendarPreferences() {
         console.error('Erreur lors de la sauvegarde des préférences de calendriers:', error);
         showNotification('Erreur lors de la sauvegarde des préférences', 'error');
     });
+}
+
+/**
+ * Ajoute les événements Google à une cellule de calendrier pour un jour donné.
+ * @param {HTMLElement} cell - La cellule du calendrier.
+ * @param {Date} cellDate - La date du jour affiché dans la cellule.
+ * @param {Array} googleEvents - Les événements Google Calendar.
+ */
+function addGoogleEventsToCell(cell, cellDate, googleEvents) {
+  const current = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+
+  const eventsForDay = googleEvents.filter(event => {
+    const eventStart = new Date(event.start.substring(0, 10));
+    const eventEnd = event.end
+      ? new Date(new Date(event.end.substring(0, 10)).getTime() - 24 * 60 * 60 * 1000)
+      : eventStart;
+    const isCalendarSelected = !window.selectedCalendars || window.selectedCalendars.length === 0 || window.selectedCalendars.includes(event.calendarId);
+    return isCalendarSelected
+      && !event.id.startsWith('Weeknum')
+      && (!event.startTime || event.startTime === 'Toute la journée')
+      && current >= eventStart && current <= eventEnd;
+  });
+
+  eventsForDay.forEach(event => {
+    const eventElement = document.createElement('div');
+    eventElement.className = 'calendar-event all-day';
+    eventElement.textContent = event.title || 'Sans titre';
+    if (event.backgroundColor) {
+      eventElement.style.backgroundColor = event.backgroundColor;
+    }
+    cell.appendChild(eventElement);
+  });
 }
 
 // Afficher les événements Google dans le calendrier
@@ -459,6 +519,13 @@ function renderGoogleEvents(date, dayDiv) {
 document.addEventListener('DOMContentLoaded', function() {
 	// Attendre que le calendrier ou l'agenda soit initialisé
 	setTimeout(initGoogleCalendar, 500);
+
+	// Toujours attacher le gestionnaire même si le bouton n'est pas encore visible
+	document.body.addEventListener('click', function(e) {
+		if (e.target && e.target.id === 'google-calendar-disconnect-btn') {
+			disconnectGoogleCalendar();
+		}
+	});
 	
 	// Exposer les variables et fonctions nécessaires pour l'agenda
 	window.googleEvents = googleEvents;

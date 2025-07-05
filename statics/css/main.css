@@ -4,6 +4,7 @@
  */
 
 /* Variables et styles de base */
+@import 'fonts.css';
 @import 'variables.css';
 @import 'base.css';
 
@@ -29,7 +30,10 @@
 @import 'export-dialog.css';
 @import 'print-dialog.css';
 @import 'logo.css';
+@import 'header.css';
 
 /* Utilitaires */
 @import 'print.css';
 @import 'utilities.css';
+
+/* @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'); */

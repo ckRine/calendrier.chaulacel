@@ -1,44 +1,45 @@
-{% extends "base.twig" %}
+	{% extends "base.twig" %}
 
-{% block title %}Agenda - ChronoGestCal{% endblock %}
+	{% block title %}Agenda - ChronoGestCal{% endblock %}
 
-{% block content %}
-    {% include 'header/header.twig' %}
-    
-    <div class="agenda-container">
-        <h1>Agenda hebdomadaire</h1>
-        
-        <div class="agenda-view">
-            <div class="agenda-sidebar">
-                <div class="agenda-date-picker">
-                    <h3>Sélectionner une date</h3>
-                    <input type="date" id="agenda-date" value="{{ now|date('Y-m-d') }}">
-                    <button id="go-to-date">Afficher</button>
-                </div>
-                
+	{% block content %}
+		<div class="agenda-container">
+				<h1>Agenda hebdomadaire</h1>
+				
+				<div class="agenda-view">
+						<div class="agenda-sidebar">
+								<div class="agenda-date-picker">
+										<h3>Sélectionner une date</h3>
+										<input type="date" id="agenda-date" value="{{ now|date('Y-m-d') }}">
+										<button id="go-to-date">Afficher</button>
+								</div>
+								
 
-            </div>
-            
-            <div class="agenda-content">
-                <div class="agenda-header">
-                    <button id="prev-week">&lt; Semaine précédente</button>
-                    <h2 id="current-week-range">Semaine du {{ now|date('d/m/Y') }}</h2>
-                    <button id="next-week">Semaine suivante &gt;</button>
-                </div>
-                
-                <div class="agenda-grid" id="agenda-grid">
-                    <!-- Le contenu sera généré dynamiquement par JavaScript -->
-                    <div class="loading">Chargement de l'agenda...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    {% include 'day-popup.twig' %}
-    {% include 'auth/auth-form.twig' %}
-{% endblock %}
+						</div>
+						
+						<div class="agenda-content">
+								<div class="agenda-header">
+									<button id="prev-week">&lt; Semaine précédente</button>
+									<h2 id="current-week-range">Semaine du {{ now|date('d/m/Y') }}</h2>
+									<button id="next-week">Semaine suivante &gt;</button>
+								</div>
+								
+								<div class="agenda-grid" id="agenda-grid">
+									<!-- Le contenu sera généré dynamiquement par JavaScript -->
+									<div class="loading">Chargement de l'agenda...</div>
+								</div>
 
-{% block javascripts %}
-    {{ parent() }}
-    <script src="{{ STATICS_PATH }}/js/agenda.js"></script>
-{% endblock %}
+								<div class="events-list">
+									<p>Cliquer sur une cellule pour ajouter un événement.</p>
+							</div>
+						</div>
+				</div>
+		</div>
+		
+		{% include 'day-popup.twig' %}
+	{% endblock %}
+
+	{% block javascripts %}
+		{{ parent() }}
+		<script src="{{ STATICS_PATH }}/js/agenda.js"></script>
+	{% endblock %}

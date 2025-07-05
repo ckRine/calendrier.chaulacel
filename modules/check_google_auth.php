@@ -39,7 +39,7 @@ try {
 		]);
 		exit;
 	}
-	
+
 	// Vérifier si l'utilisateur a choisi de se connecter automatiquement
 	$should_auto_connect = false;
 	if (isset($_SESSION['google_auto_connect']) && $_SESSION['google_auto_connect']) {
@@ -51,7 +51,7 @@ try {
 				$stmt = $pdo->prepare("SELECT preferences FROM user_preferences WHERE user_id = ?");
 				$stmt->execute([$_SESSION['user_id']]);
 				$result = $stmt->fetch(PDO::FETCH_ASSOC);
-				
+
 				if ($result) {
 					$preferences = json_decode($result['preferences'], true);
 					if (isset($preferences['google_auto_connect']) && $preferences['google_auto_connect']) {
@@ -64,42 +64,42 @@ try {
 			}
 		}
 	}
-	
+
 	// Vérifier si un token existe dans la base de données
 	$connected = false;
-	
+
 	// Vérifier si la connexion à la base de données est disponible
 	if (isset($pdo) && $pdo !== null) {
-			try {
-					$stmt = $pdo->prepare("SELECT token FROM google_tokens WHERE user_id = ?");
-					$stmt->execute([$_SESSION['user_id']]);
-					$tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
-					
-					if ($tokenData) {
-							$connected = true;
-							// Stocker le token dans la session pour une reconnexion automatique
-							$_SESSION['google_access_token'] = json_decode($tokenData['token'], true);
-							$_SESSION['google_connected'] = true;
-					}
-			} catch (PDOException $e) {
-					error_log('Erreur de base de données: ' . $e->getMessage());
+		try {
+			$stmt = $pdo->prepare("SELECT token FROM google_tokens WHERE user_id = ?");
+			$stmt->execute([$_SESSION['user_id']]);
+			$tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			if ($tokenData) {
+				$connected = true;
+				// Stocker le token dans la session pour une reconnexion automatique
+				$_SESSION['google_access_token'] = json_decode($tokenData['token'], true);
+				$_SESSION['google_connected'] = true;
 			}
+		} catch (PDOException $e) {
+			error_log('Erreur de base de données: ' . $e->getMessage());
+		}
 	} else {
-			// Mode démo sans base de données
-			$connected = isset($_SESSION['google_connected']) && $_SESSION['google_connected'];
+		// Mode démo sans base de données
+		$connected = isset($_SESSION['google_connected']) && $_SESSION['google_connected'];
 	}
 
 	echo json_encode([
-			'success' => true,
-			'connected' => $connected,
-			'should_auto_connect' => $should_auto_connect && !$connected
+		'success' => true,
+		'connected' => $connected,
+		'should_auto_connect' => $should_auto_connect && !$connected
 	]);
 } catch (Exception $e) {
 	echo json_encode([
-			'success' => false,
-			'message' => 'Erreur: ' . $e->getMessage(),
-			'connected' => false,
-			'should_auto_connect' => false
+		'success' => false,
+		'message' => 'Erreur: ' . $e->getMessage(),
+		'connected' => false,
+		'should_auto_connect' => false
 	]);
 }
 ?>

@@ -4,6 +4,10 @@
 let currentDate = new Date();
 let notes = {}; // Stockage des notes par jour
 
+// Déclarer la variable une seule fois en haut du fichier
+let upcomingEventsOffset = 0;
+let initialUpcomingOffset = 0;
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', async function() {
 	// Charger d'abord les données nécessaires
@@ -48,7 +52,7 @@ async function loadData() {
 	// Charger les vacances scolaires
 	const schoolHolidays = { A: {}, B: {}, C: {} };
 	
-	// Récupérer les zones sélectionnées depuis les préférences utilisateur
+	// Utiliser le cache pour les préférences utilisateur
 	const selectedZones = await getUserPreferences();
 	console.log("Zones sélectionnées:", selectedZones);
 	
@@ -66,22 +70,33 @@ async function loadData() {
 	}
 }
 
-// Fonction pour récupérer les préférences utilisateur
+// Ajout d'un cache pour les préférences utilisateur
+let userPreferencesCache = null;
+let userPreferencesPromise = null;
+
+// Fonction pour récupérer les préférences utilisateur (optimisée, un seul appel réseau)
 async function getUserPreferences() {
-	try {
-		const response = await fetch('./modules/get_user_preferences.php');
-		if (!response.ok) {
-			throw new Error('Erreur réseau');
-		}
-		const data = await response.json();
-		if (data.success && data.preferences && data.preferences.zones) {
-			return data.preferences.zones;
-		}
-	} catch (error) {
-		console.error('Erreur lors du chargement des préférences:', error);
+	if (userPreferencesCache) {
+		return userPreferencesCache;
 	}
-	// Valeur par défaut si erreur
-	return ['A', 'B'];
+	if (userPreferencesPromise) {
+		return userPreferencesPromise;
+	}
+	userPreferencesPromise = fetch('./modules/get_user_preferences.php')
+		.then(response => {
+			if (!response.ok) throw new Error('Erreur réseau');
+			return response.json();
+		})
+		.then(data => {
+			if (data.success && data.preferences && data.preferences.zones) {
+				userPreferencesCache = data.preferences.zones;
+				return userPreferencesCache;
+			}
+			return ['A', 'B'];
+		})
+		.catch(() => ['A', 'B'])
+		.finally(() => { userPreferencesPromise = null; });
+	return userPreferencesPromise;
 }
 
 // Fonction pour récupérer les zones sélectionnées
@@ -203,6 +218,49 @@ function renderAgenda(date) {
 	// Créer l'en-tête avec les jours
 	createHeader(agendaGrid, days);
 	
+// Fonction pour créer une ligne d'heure
+	function createHourRow(grid, hour, days) {
+		// Cellule d'heure
+		const hourCell = document.createElement('div');
+		hourCell.className = 'agenda-cell time';
+		hourCell.textContent = `${hour}:00`;
+		grid.appendChild(hourCell);
+		
+		// Cellules pour chaque jour à cette heure
+		days.forEach(day => {
+			const cell = document.createElement('div');
+			cell.className = `agenda-cell ${isToday(day) ? 'today' : ''} ${isWeekend(day) ? (day.getDay() === 6 ? 'saturday' : 'sunday') : ''}`;
+			
+			// Ajouter la classe holiday si c'est un jour férié
+			if (getHolidayName(day)) {
+					cell.classList.add('holiday');
+			}
+			
+			// Ajouter la classe school-holiday si c'est un jour de vacances scolaires
+			if (isSchoolHoliday(day)) {
+					cell.classList.add('school-holiday');
+			}
+			
+			// Si c'est l'heupeof goore "Notes" (heure 23), ajouter un textarea
+			if (hour === 23) {
+				const dateStr = formatDate(day);
+				const textarea = document.createElement('textarea');
+				textarea.className = 'agenda-note';
+				textarea.placeholder = 'Notes...';
+				textarea.dataset.date = dateStr;
+				
+				// Charger les notes existantes
+				if (notes[dateStr]) {
+						textarea.value = notes[dateStr];
+				}
+				
+				cell.appendChild(textarea);
+			}
+			
+			grid.appendChild(cell);
+		});
+	}
+	
 	// Créer les lignes pour chaque heure
 	for (let hour = 0; hour < 24; hour++) {
 			createHourRow(agendaGrid, hour, days);
@@ -213,6 +271,9 @@ function renderAgenda(date) {
 	
 	// Ajouter les gestionnaires d'événements pour les notes
 	setupNoteHandlers();
+	// Initialiser l'offset à -1 pour forcer le calcul sur le prochain renderUpcomingEvents
+	upcomingEventsOffset = -1;
+	renderUpcomingEvents();
 }
 
 // Fonction pour créer l'en-tête de l'agenda
@@ -268,151 +329,60 @@ function createHeader(grid, days) {
 
 // Fonction pour créer une ligne pour les événements de toute la journée
 function createAllDayRow(grid, days) {
-	// Cellule d'étiquette pour les événements de toute la journée
-	const labelCell = document.createElement('div');
-	labelCell.className = 'agenda-cell all-day-row';
-	labelCell.textContent = 'Journée';
-	grid.appendChild(labelCell);
-	
-	// Cellules pour chaque jour
-	days.forEach(day => {
-			const cell = document.createElement('div');
-			cell.className = `agenda-cell all-day-row ${isToday(day) ? 'today' : ''} ${isWeekend(day) ? (day.getDay() === 6 ? 'saturday' : 'sunday') : ''}`;
-			
-			// Ajouter la classe holiday si c'est un jour férié
-			if (getHolidayName(day)) {
-					cell.classList.add('holiday');
-			}
-			
-			// Ajouter la classe school-holiday si c'est un jour de vacances scolaires
-			if (isSchoolHoliday(day)) {
-					cell.classList.add('school-holiday');
-			}
-			
-			// Créer un conteneur pour les informations du jour
-			const dayInfoContainer = document.createElement('div');
-			dayInfoContainer.className = 'day-info-container';
-			
-			// Ajouter les informations supplémentaires du jour (semaine, jour de l'année, etc.)
-			const dayInfo = document.createElement('div');
-			dayInfo.className = 'day-info';
-			
-			// Numéro de semaine
-			const weekNumber = getWeekNumber(day);
-			dayInfo.innerHTML = `<div>Semaine ${weekNumber}</div>`;
-			
-			// Jour de l'année
-			const dayOfYear = getDayOfYear(day);
-			dayInfo.innerHTML += `<div>Jour ${dayOfYear}</div>`;
-			
-			dayInfoContainer.appendChild(dayInfo);
-			
-			// Ajouter les informations du jour
-			// Jour férié
-			const holidayName = getHolidayName(day);
-			if (holidayName) {
-					const holidayInfo = document.createElement('div');
-					holidayInfo.className = 'agenda-event holiday';
-					holidayInfo.textContent = holidayName;
-					dayInfoContainer.appendChild(holidayInfo);
-			}
-			
-			// Vacances scolaires
-			// Forcer l'affichage des zones pour le test
-			const zones = getSchoolHolidayZones(day);
-			console.log(`Jour ${day.getDate()}/${day.getMonth() + 1}, zones:`, zones);
-			
-			// Si c'est un jour de vacances scolaires ou si on force l'affichage pour le test
-			if (zones.length > 0) {
-					// Créer un conteneur pour les zones
-					const zonesContainer = document.createElement('div');
-					zonesContainer.className = 'zones-container';
-					
-					// Ajouter un badge pour chaque zone
-					zones.forEach((zone, index) => {
-							const zoneBadge = document.createElement('span');
-							zoneBadge.className = `zone-badge zone-${zone}`;
-							zoneBadge.textContent = `${zone}`;
-							zonesContainer.appendChild(zoneBadge);
-					});
-					
-					dayInfoContainer.appendChild(zonesContainer);
-			}
-			
-			// Ajouter les événements Google Calendar de toute la journée
-			if (typeof googleConnected !== 'undefined' && googleConnected) {
-					if (typeof googleEvents !== 'undefined' && googleEvents && googleEvents.length > 0) {
-							const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-							
-							// Filtrer les événements pour cette date qui durent toute la journée
-							const allDayEvents = googleEvents.filter(event => {
-									const eventDate = event.start.substring(0, 10);
-									const isCalendarSelected = !window.selectedCalendars || window.selectedCalendars.length === 0 || window.selectedCalendars.includes(event.calendarId);
-									return eventDate === dateStr && isCalendarSelected && !event.id.startsWith('Weeknum') && 
-											(!event.startTime || event.startTime === 'Toute la journée');
-							});
-							
-							// Ajouter chaque événement de toute la journée
-							allDayEvents.forEach(event => {
-									const eventElement = document.createElement('div');
-									eventElement.className = 'agenda-event all-day';
-									eventElement.textContent = event.title || 'Sans titre';
-									
-									if (event.backgroundColor) {
-											eventElement.style.backgroundColor = event.backgroundColor;
-									}
-									
-									dayInfoContainer.appendChild(eventElement);
-							});
-					}
-			}
-			
-			cell.appendChild(dayInfoContainer);
-			grid.appendChild(cell);
-	});
-}
+    // Cellule d'étiquette pour les événements de toute la journée
+    const labelCell = document.createElement('div');
+    labelCell.className = 'agenda-cell all-day-row';
+    labelCell.textContent = 'Journée';
+    grid.appendChild(labelCell);
 
-// Fonction pour créer une ligne d'heure
-function createHourRow(grid, hour, days) {
-	// Cellule d'heure
-	const hourCell = document.createElement('div');
-	hourCell.className = 'agenda-cell time';
-	hourCell.textContent = `${hour}:00`;
-	grid.appendChild(hourCell);
-	
-	// Cellules pour chaque jour à cette heure
-	days.forEach(day => {
-			const cell = document.createElement('div');
-			cell.className = `agenda-cell ${isToday(day) ? 'today' : ''} ${isWeekend(day) ? (day.getDay() === 6 ? 'saturday' : 'sunday') : ''}`;
-			
-			// Ajouter la classe holiday si c'est un jour férié
-			if (getHolidayName(day)) {
-					cell.classList.add('holiday');
-			}
-			
-			// Ajouter la classe school-holiday si c'est un jour de vacances scolaires
-			if (isSchoolHoliday(day)) {
-					cell.classList.add('school-holiday');
-			}
-			
-			// Si c'est l'heure "Notes" (heure 23), ajouter un textarea
-			if (hour === 23) {
-					const dateStr = formatDate(day);
-					const textarea = document.createElement('textarea');
-					textarea.className = 'agenda-note';
-					textarea.placeholder = 'Notes...';
-					textarea.dataset.date = dateStr;
-					
-					// Charger les notes existantes
-					if (notes[dateStr]) {
-							textarea.value = notes[dateStr];
-					}
-					
-					cell.appendChild(textarea);
-			}
-			
-			grid.appendChild(cell);
-	});
+    // Cellules pour chaque jour
+    days.forEach(day => {
+      const cell = document.createElement('div');
+      cell.className = `agenda-cell all-day-row ${isToday(day) ? 'today' : ''} ${isWeekend(day) ? (day.getDay() === 6 ? 'saturday' : 'sunday') : ''}`;
+
+      // Ajouter la classe holiday si c'est un jour férié
+      if (getHolidayName(day)) {
+        cell.classList.add('holiday');
+      }
+
+      // Ajouter la classe school-holiday si c'est un jour de vacances scolaires
+      if (isSchoolHoliday(day)) {
+        cell.classList.add('school-holiday');
+      }
+
+      const dayInfoContainer = document.createElement('div');
+
+      // Ajouter les événements Google Calendar de toute la journée ou sur plusieurs jours
+      if (typeof googleConnected !== 'undefined' && googleConnected) {
+        if (typeof googleEvents !== 'undefined' && googleEvents && googleEvents.length > 0) {
+          const current = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+          const allDayEvents = googleEvents.filter(event => {
+            const eventStart = new Date(event.start.substring(0, 10));
+            const eventEnd = event.end
+              ? new Date(new Date(event.end.substring(0, 10)).getTime() - 24 * 60 * 60 * 1000)
+              : eventStart;
+            const isCalendarSelected = !window.selectedCalendars || window.selectedCalendars.length === 0 || window.selectedCalendars.includes(event.calendarId);
+            return isCalendarSelected
+              && !event.id.startsWith('Weeknum')
+              && (!event.startTime || event.startTime === 'Toute la journée')
+              && current >= eventStart && current <= eventEnd;
+          });
+
+          allDayEvents.forEach(event => {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'agenda-event all-day';
+            eventElement.textContent = event.title || 'Sans titre';
+            if (event.backgroundColor) {
+              eventElement.style.backgroundColor = event.backgroundColor;
+            }
+            dayInfoContainer.appendChild(eventElement);
+          });
+        }
+      }
+
+      cell.appendChild(dayInfoContainer);
+      grid.appendChild(cell);
+    });
 }
 
 // Fonction pour ajouter les événements à l'agenda
@@ -621,4 +591,104 @@ function getDayOfYear(date) {
 	const diff = date - start;
 	const oneDay = 1000 * 60 * 60 * 24;
 	return Math.floor(diff / oneDay);
+}
+
+// Affiche les 10 premiers événements à venir (non passés), navigation uniquement sur les suivants
+upcomingEventsOffset = 0;
+
+function renderUpcomingEvents() {
+	const container = document.querySelector('.events-list');
+	if (!container) return;
+
+	let events = [];
+	if (typeof googleEvents !== 'undefined' && googleEvents && googleEvents.length > 0) {
+		events = googleEvents
+			.slice()
+			.filter(ev => !ev.id || !ev.id.startsWith('Weeknum'))
+			.sort((a, b) => new Date(a.start) - new Date(b.start));
+	}
+
+	let firstUpcomingIdx = events.findIndex(ev => new Date(ev.start) >= new Date());
+	if (firstUpcomingIdx === -1) firstUpcomingIdx = events.length;
+
+	const pageSize = 8;
+	const scrollStep = 3; // Défiler de 3 événements à chaque clic
+	const total = events.length;
+	const maxOffset = Math.max(0, total - pageSize);
+
+	// Initial offset: 8 prochains événements à partir d'aujourd'hui
+	if (upcomingEventsOffset === -1) {
+		upcomingEventsOffset = firstUpcomingIdx;
+		initialUpcomingOffset = firstUpcomingIdx;
+	}
+	// Clamp offset
+	upcomingEventsOffset = Math.max(0, Math.min(upcomingEventsOffset, maxOffset));
+
+	const pageEvents = events.slice(upcomingEventsOffset, upcomingEventsOffset + pageSize);
+
+	let html = '<h4>Événements</h4>';
+	html += `
+		<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+			<button id="upcoming-prev" class="events-list-nav-btn"${upcomingEventsOffset === 0 ? ' disabled' : ''}><span class="chevron-arrow"></span></button>
+			<button id="upcoming-next" class="events-list-nav-btn"${upcomingEventsOffset + pageSize >= events.length ? ' disabled' : ''}><span class="chevron-arrow"></span></button>
+		</div>
+	`;
+
+	if (pageEvents.length === 0) {
+		html += '<div class="no-events">Aucun événement</div>';
+	} else {
+		const now = new Date();
+		html += '<ul class="upcoming-events">';
+		pageEvents.forEach(ev => {
+			const date = ev.start ? new Date(ev.start) : null;
+			const isPast = date && date < now;
+			let dateStr = '';
+			let timeStr = '';
+			if (date) {
+				dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+				if (ev.startTime && ev.startTime !== 'Toute la journée') {
+					timeStr = ev.startTime;
+					if (ev.endTime && ev.endTime !== ev.startTime) {
+						timeStr += ' - ' + ev.endTime;
+					}
+				} else {
+					timeStr = 'Toute la journée';
+				}
+			}
+			html += `<li class="upcoming-event${isPast ? ' past' : ''}" style="border-left-color:${ev.backgroundColor || '#4285F4'}">
+				<span style="font-weight:bold;font-size:15px;margin-bottom:2px;">${dateStr}</span>
+				<span style="color:#1976d2;font-size:13px;margin-bottom:2px;">${timeStr}</span>
+				<div><strong>${ev.title || 'Sans titre'}</strong></div>
+			</li>`;
+		});
+		html += '</ul>';
+	}
+	container.innerHTML = html;
+
+	// Gestionnaires pour les flèches
+	const prevBtn = document.getElementById('upcoming-prev');
+	const nextBtn = document.getElementById('upcoming-next');
+	if (prevBtn) prevBtn.onclick = function() {
+		if (upcomingEventsOffset > 0) {
+			upcomingEventsOffset = Math.max(0, upcomingEventsOffset - scrollStep);
+			renderUpcomingEvents();
+		}
+	};
+	if (nextBtn) nextBtn.onclick = function() {
+		if (upcomingEventsOffset + pageSize < total) {
+			upcomingEventsOffset = Math.min(maxOffset, upcomingEventsOffset + scrollStep);
+			renderUpcomingEvents();
+		}
+	};
+}
+
+// Si Google Calendar est connecté, re-render la liste des événements à venir après fetchGoogleEvents
+if (typeof fetchGoogleEvents === 'function') {
+	const originalFetchGoogleEvents = fetchGoogleEvents;
+	window.fetchGoogleEvents = async function(...args) {
+		const result = await originalFetchGoogleEvents.apply(this, args);
+		upcomingEventsOffset = -1;
+		renderUpcomingEvents();
+		return result;
+	};
 }

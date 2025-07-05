@@ -3,8 +3,6 @@
 {% block title %}Mon compte - ChronoGestCal{% endblock %}
 
 {% block content %}
-    {% include 'header/header.twig' %}
-    
     <div class="account-container">
         <h1>Mon compte</h1>
         
@@ -41,7 +39,10 @@
             <div class="account-section">
                 <h2>Google Calendar</h2>
                 <div id="google-auth-container">
-                    <!-- Le contenu sera chargé dynamiquement par JavaScript -->
+                    <!-- Le bouton Connecter/Déconnecter Google Calendar sera injecté ici par JS -->
+                </div>
+                <div id="google-calendar-disconnect" style="display: none; margin-top: 10px;">
+                    <button id="google-calendar-disconnect-btn" class="google-connected">Déconnecter Google Calendar</button>
                 </div>
                 <div id="google-calendars-list" style="display: none;">
                     <h3>Calendriers disponibles</h3>
@@ -57,11 +58,9 @@
             </div>
         {% endif %}
     </div>
-    
-    {% include 'auth/auth-form.twig' %}
+
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ STATICS_PATH }}/js/account.js"></script>
 {% endblock %}

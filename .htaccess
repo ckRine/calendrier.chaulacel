@@ -16,21 +16,21 @@
     php_value max_input_time 300
 </IfModule>
 
-# Redirection vers HTTPS (décommentez si nécessaire)
-# RewriteEngine On
+# Activer le module de réécriture
+RewriteEngine On
+
+# Redirection vers HTTPS en production (décommentez si nécessaire)
 # RewriteCond %{HTTPS} off
 # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# URLs propres
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^/]+)/?$ index.php?page=$1 [L,QSA]
+
 # Protection des fichiers sensibles
 <FilesMatch "^(\.htaccess|\.htpasswd|\.git|\.env|composer\.json|composer\.lock)">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-
-# Permettre l'accès aux fichiers PHP
-<FilesMatch "\.php$">
-    Order Allow,Deny
-    Allow from all
+    Require all denied
 </FilesMatch>
 
 # Désactiver l'affichage du contenu des répertoires

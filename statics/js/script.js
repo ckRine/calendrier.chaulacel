@@ -490,9 +490,16 @@ async function forceLogout() {
 		document.cookie = 'PHPSESSID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 		
 		// Rediriger vers la page d'accueil
-		window.location.href = './index.php';
+		window.location.href = 'calendrier';
 	}
 }
 
 loadPreferences();
 renderVisibleMonths();
+
+// Initialiser Google Calendar après le chargement de la page
+setTimeout(() => {
+	if (typeof initGoogleCalendar === 'function') {
+		initGoogleCalendar();
+	}
+}, 1000);
