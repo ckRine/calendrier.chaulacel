@@ -50,3 +50,12 @@
 .vacation-bar.active.zone-c {
     background: var(--zone-c);
 }
+
+.chevron-arrow {
+    display: inline-block;
+    border-right: 4px solid black;
+    border-bottom: 4px solid black;
+    width: 10px;
+    height: 10px;
+    transform: rotate(-45deg);
+}

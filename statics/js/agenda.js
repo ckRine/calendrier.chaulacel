@@ -611,12 +611,12 @@ function renderUpcomingEvents() {
 	let firstUpcomingIdx = events.findIndex(ev => new Date(ev.start) >= new Date());
 	if (firstUpcomingIdx === -1) firstUpcomingIdx = events.length;
 
-	const pageSize = 8;
-	const scrollStep = 3; // Défiler de 3 événements à chaque clic
+	const pageSize = 5;
+	const scrollStep = 2; // Défiler de 2 événements à chaque clic
 	const total = events.length;
 	const maxOffset = Math.max(0, total - pageSize);
 
-	// Initial offset: 8 prochains événements à partir d'aujourd'hui
+	// Initial offset: 5 prochains événements à partir d'aujourd'hui
 	if (upcomingEventsOffset === -1) {
 		upcomingEventsOffset = firstUpcomingIdx;
 		initialUpcomingOffset = firstUpcomingIdx;

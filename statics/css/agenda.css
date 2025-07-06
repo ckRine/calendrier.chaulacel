@@ -12,18 +12,9 @@
 }
 
 .agenda-view {
-	display: flex;
-	flex-direction: column;
 	gap: 20px;
 }
 
-/* Sidebar */
-.agenda-sidebar {
-	width: 100%;
-	background-color: #f5f5f5;
-	border-radius: var(--radius-md);
-	padding: 15px;
-}
 
 .agenda-date-picker h3 {
 	display: inline;
@@ -79,21 +70,27 @@
 
 /* Contenu principal */
 .agenda-content {
-	flex-grow: 1;
 	background-color: var(--bg-light);
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-sm);
+	flex-grow: 1;
+	float: left;
 	overflow: hidden;
+	width: 70%;
 }
 
 .agenda-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
 	margin-bottom: 10px;
 	padding: 10px 15px;
 	background-color: #f9f9f9;
 	border-bottom: 1px solid var(--border-light);
+}
+
+.agenda-actions {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
 }
 
 .agenda-header h2 {
@@ -114,6 +111,25 @@
 	background-color: #f1f1f1;
 }
 
+.agenda-header .chevron-arrow {
+	width: 5px;
+	height: 5px;
+}
+
+.agenda-header #prev-week .chevron-arrow {
+	transform: rotate(135deg);
+}
+
+#go-to-date {
+	background-color: var(--primary);
+	color: white;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	padding: 8px 12px;
+	margin-left: 10px;
+}
+
 /* Grille de l'agenda */
 .agenda-grid {
 	display: grid;
@@ -123,14 +139,13 @@
 	grid-auto-rows: 50px;
 	height: 600px;
 	overflow-y: auto;
-	width: 70%;
 }
 
 .agenda-cell {
 	border: 1px solid var(--border-medium);
 	padding: 5px;
 	position: relative;
-	width: calc(100% - 29px / 7);
+	width: calc(100% - 23px / 7);
 	box-sizing: border-box;
 }
 
@@ -388,14 +403,24 @@
 	grid-column: 1 / -1;
 }
 
-.events-list {
+.agenda-sidebar {
+	background-color: var(--bg-light);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+	box-sizing: border-box;
 	float: left;
+	margin-left: var(--spacing-md);
+	padding: 0 var(--spacing-md);
+	width: calc(30% - var(--spacing-md));
+}
+
+.events-list {
+	margin-bottom: 20px;
 	position: relative;
-	width: 30%;
 }
 
 .events-list h4 {
-	margin: 0 0 5px 5px;
+	margin: 0px 0 16px 0;
 }
 
 .events-list #upcoming-prev {
@@ -403,7 +428,7 @@
 }
 
 .events-list #upcoming-next {
-	bottom: -23px;
+	bottom: -20px;
 	position: absolute;
 }
 
@@ -422,17 +447,8 @@
 	cursor: not-allowed;
 }
 
-.chevron-arrow {
-	display: inline-block;
-	border-right: 4px solid black;
-	border-bottom: 4px solid black;
-	width: 10px;
-	height: 10px;
-	transform: rotate(-45deg);
-}
-
 #upcoming-prev .chevron-arrow {
-	transform: rotate(230deg);
+	transform: rotate(225deg);
 }
 
 #upcoming-next .chevron-arrow {
@@ -442,7 +458,8 @@
 /* Events List */
 .upcoming-events {
 	list-style: none;
-	padding: 0 15px;
+	margin: 0 5px 25px 5px;
+	padding: 0;
 }
 
 /* Events list item */
@@ -459,11 +476,11 @@
 	filter: grayscale(0.7);
 }
 
+/* Notes */
+.notes {}
+
 /* Responsive */
 @media (max-width: 768px) {
-	.agenda-sidebar {
-		width: 100%;
-	}
 
 	.agenda-grid {
 		grid-template-columns: 60px repeat(7, 1fr);
